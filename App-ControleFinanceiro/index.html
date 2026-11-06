@@ -1,0 +1,1113 @@
+<title>Livro-Caixa</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sidebar fixa à esquerda (desktop) / barra inferior (celular); conteúdo em coluna única com linhas de extrato tipo livro-caixa */
+:root{
+  --bg:#eef2f0; --surface:#ffffff; --surface-2:#e4ebe8; --ink:#14211d; --muted:#5a6b65; --line:#d3ddd9;
+  --accent:#0d5c4c; --accent-ink:#ffffff; --accent-soft:#d6ebe5;
+  --pos:#1b7543; --neg:#b2352d; --warn:#9a5f00; --warn-bg:#fbefd9; --neg-bg:#f9e2df; --pos-bg:#dcf0e3;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0d1412; --surface:#141e1b; --surface-2:#1b2824; --ink:#e2ebe8; --muted:#90a39c; --line:#273631;
+  --accent:#5fc6ab; --accent-ink:#06221b; --accent-soft:#16352d;
+  --pos:#62cf90; --neg:#f17d72; --warn:#e5b04c; --warn-bg:#33270f; --neg-bg:#3a1c19; --pos-bg:#14301f;
+  color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0d1412; --surface:#141e1b; --surface-2:#1b2824; --ink:#e2ebe8; --muted:#90a39c; --line:#273631;
+  --accent:#5fc6ab; --accent-ink:#06221b; --accent-soft:#16352d;
+  --pos:#62cf90; --neg:#f17d72; --warn:#e5b04c; --warn-bg:#33270f; --neg-bg:#3a1c19; --pos-bg:#14301f;
+  color-scheme:dark }
+*{box-sizing:border-box}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body);-webkit-font-smoothing:antialiased}
+button,input,select,textarea,table{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);font-weight:700;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h1{font-size:1.75rem} h2{font-size:1.15rem} h3{font-size:1rem}
+p{margin:0}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.app{display:grid;grid-template-columns:228px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:4px;padding-block:22px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:14px;background:var(--surface);border-right:1px solid var(--line)}
+.brand{display:flex;align-items:baseline;gap:8px;padding:0 10px 18px}
+.brand b{font-family:var(--f-display);font-size:1.3rem}
+.brand span{font-size:.72rem;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.nav a{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;color:var(--muted);text-decoration:none;font-weight:500}
+.nav a:hover{background:var(--surface-2);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--accent-soft);color:var(--accent)}
+.side .store{margin-top:auto;font-size:.78rem;color:var(--muted);padding:10px}
+main{min-width:0;padding-block:26px 110px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1080px;margin:0 auto;display:grid;gap:22px}
+.bottom{display:none}
+
+.phead{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.phead .sub{color:var(--muted);margin-top:4px}
+.hact{display:flex;flex-wrap:wrap;gap:8px}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--neg);border-color:color-mix(in srgb,var(--neg) 45%,var(--line))}
+.btn.danger.solid{background:var(--neg);color:var(--surface);border-color:var(--neg)}
+.btn.sm{padding:4px 10px;font-size:.85rem}
+.btn.ghost{background:transparent;border-color:transparent}
+.icon-btn{border:1px solid var(--line);background:var(--surface);width:34px;height:34px;border-radius:8px;cursor:pointer;font-size:1.1rem;line-height:1}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;min-width:0}
+.panel > h2{margin-bottom:12px}
+.panel-h{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:22px}
+.muted{color:var(--muted)}
+.small{font-size:.85rem}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:var(--r);background:var(--surface);overflow:hidden}
+.kpi{padding:16px 18px;border-right:1px solid var(--line);min-width:0}
+.kpi:last-child{border-right:0}
+.kpi .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.35rem;font-weight:500;margin-top:6px;overflow-wrap:anywhere}
+.kpi .h{font-size:.8rem;color:var(--muted);margin-top:2px}
+
+.pos{color:var(--pos)} .neg{color:var(--neg)} .warn{color:var(--warn)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:99px;background:var(--surface-2);color:var(--muted);white-space:nowrap}
+.pill.warn{background:var(--warn-bg);color:var(--warn)}
+.pill.neg{background:var(--neg-bg);color:var(--neg)}
+.pill.pos{background:var(--pos-bg);color:var(--pos)}
+.pill.acc{background:var(--accent-soft);color:var(--accent)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:.8rem;color:var(--muted);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--muted)}
+
+/* linhas de extrato */
+.rows{display:grid}
+.row{display:grid;grid-template-columns:62px minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
+.row.has-bal{grid-template-columns:62px minmax(0,1fr) auto 120px}
+.rows > .row:first-child{border-top:0}
+.row:hover{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.r-date{font-family:var(--f-mono);font-size:.82rem;color:var(--muted)}
+.r-title{font-weight:500;overflow-wrap:anywhere}
+.r-meta{display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:2px;align-items:center}
+.r-amt{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.r-bal{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;color:var(--muted);font-size:.88rem}
+.row.is-pend .r-title{color:var(--muted)}
+.row.is-pend .r-amt{opacity:.75}
+.r-act{grid-column:3;display:flex;gap:6px;justify-content:flex-end}
+.row:has(.r-act) .r-main,.row:has(.r-act) .r-date{grid-row:span 2}
+.rowline{display:flex;justify-content:space-between;gap:12px;padding:8px 4px;border-top:1px dashed var(--line);font-size:.9rem}
+.empty{padding:22px 4px;color:var(--muted)}
+.mnav{display:inline-flex;align-items:center;gap:10px}
+.mnav strong{min-width:150px;text-align:center;font-family:var(--f-display);font-weight:500}
+
+/* contas / cartões */
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{position:relative;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;cursor:pointer;display:grid;gap:4px;min-width:0}
+.tile:hover{border-color:var(--muted)}
+.tile[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.tile .t-name{display:flex;align-items:center;gap:8px;font-weight:600;overflow-wrap:anywhere}
+.tile .t-val{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.2rem}
+.tile .t-sub{font-size:.8rem;color:var(--muted)}
+.tile.add{border-style:dashed;color:var(--muted);place-content:center;justify-items:center;min-height:96px;background:transparent}
+.bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;margin-top:6px}
+.bar > i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.bar > i.hot{background:var(--neg)}
+.inv-sum{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;padding:4px 0 14px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.inv-sum .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.05rem;margin-top:2px}
+
+/* categorias gráfico */
+.cbars{display:grid;gap:10px}
+.cbar{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.9rem}
+.cbar .lbl{display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.cbar .track{height:12px;position:relative}
+.cbar .track i{position:absolute;left:0;top:0;bottom:0;background:var(--accent);border-radius:0 4px 4px 0;min-width:2px}
+.cbar:hover .track i{filter:brightness(1.15)}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters select,.filters input{min-width:0}
+input,select,textarea{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+textarea{min-height:64px;resize:vertical}
+.filters input,.filters select{width:auto}
+.filters input[type="search"]{flex:1 1 180px}
+
+.onb{display:grid;gap:14px;max-width:640px}
+.onb ol{margin:0;padding-left:20px;display:grid;gap:6px;color:var(--muted)}
+.list-simple{display:grid}
+.list-simple > div{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 4px;border-top:1px solid var(--line)}
+.list-simple > div:first-child{border-top:0}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);cursor:pointer;font-weight:500}
+
+/* modal */
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 32px)}
+dialog::backdrop{background:rgba(5,15,12,.45)}
+dialog form{display:flex;flex-direction:column;max-height:calc(100vh - 34px)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.db{padding:16px 18px;overflow:auto;display:grid;gap:12px}
+.df{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;align-items:center;padding:12px 18px;border-top:1px solid var(--line)}
+.df .spacer{margin-right:auto}
+.x{background:none;border:0;font-size:1.5rem;line-height:1;cursor:pointer;color:var(--muted)}
+.field{display:grid;gap:4px;min-width:0;align-content:start}
+.field > span{font-size:.8rem;font-weight:600;color:var(--muted)}
+.field .hint{font-size:.8rem;color:var(--muted)}
+.frow{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+.seg{display:flex;flex-wrap:wrap;background:var(--surface-2);border-radius:9px;padding:3px;gap:3px}
+.seg label{flex:1;position:relative}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg span{display:block;text-align:center;padding:7px 8px;border-radius:7px;cursor:pointer;font-weight:500;font-size:.9rem;color:var(--muted)}
+.seg input:checked + span{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.seg input:focus-visible + span{outline:2px solid var(--accent)}
+.err{color:var(--neg);padding:0 18px 4px;font-size:.9rem}
+.confirm{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:flex-end;width:100%}
+.confirm p{margin-right:auto;font-weight:500}
+.banner{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:.9rem}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:9px;font-size:.9rem;z-index:50;max-width:calc(100vw - 32px)}
+.swatches{display:flex;flex-wrap:wrap;gap:6px}
+.swatches label{position:relative}
+.swatches input{position:absolute;opacity:0}
+.swatches span{display:block;width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer}
+.swatches input:checked + span{border-color:var(--ink)}
+.swatches input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+
+@media (max-width:900px){
+  .kpis{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .kpi:nth-child(2){border-right:0}
+  .kpi:nth-child(-n+2){border-bottom:1px solid var(--line)}
+  .grid2{grid-template-columns:1fr}
+  .inv-sum{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width:760px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{display:none}
+  main{padding-block:18px 110px}
+  h1{font-size:1.45rem}
+  .bottom{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(6px,env(safe-area-inset-left,0px));padding-right:max(6px,env(safe-area-inset-right,0px))}
+  .bottom a{flex:1;display:grid;justify-items:center;gap:2px;padding:8px 0 7px;font-size:.68rem;color:var(--muted);text-decoration:none;min-width:0}
+  .bottom a[aria-current="page"]{color:var(--accent)}
+  .row,.row.has-bal{grid-template-columns:52px minmax(0,1fr) auto}
+  .row .r-bal{grid-column:3;font-size:.78rem}
+  .frow{grid-template-columns:1fr}
+  .cbar{grid-template-columns:minmax(0,110px) minmax(0,1fr) auto}
+  .mnav strong{min-width:120px}
+}
+@media (prefers-reduced-motion:no-preference){ .btn,.tile,.row{transition:background .12s,border-color .12s} }
+</style>
+
+<div class="app">
+  <aside class="side" aria-label="Navegação">
+    <div class="brand"><b>Livro-Caixa</b><span>pessoal</span></div>
+    <nav class="nav" id="nav-side"></nav>
+    <p class="store" id="store-note">Carregando…</p>
+  </aside>
+  <main><div class="wrap" id="view"></div></main>
+  <nav class="bottom" id="nav-bottom" aria-label="Navegação"></nav>
+</div>
+
+<dialog id="dlg" aria-labelledby="dlg-title">
+  <form id="dlg-form" novalidate>
+    <div class="dh"><h2 id="dlg-title"></h2><button type="button" class="x" data-act="close" aria-label="Fechar">×</button></div>
+    <div class="db" id="dlg-body"></div>
+    <p class="err" id="dlg-err" hidden></p>
+    <div class="df" id="dlg-foot"></div>
+  </form>
+</dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+"use strict";
+/* ---------- utilidades ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad = n => String(n).padStart(2, "0");
+const BRL = new Intl.NumberFormat("pt-BR", {style:"currency", currency:"BRL"});
+const money = c => BRL.format((c || 0) / 100);
+const centsToInput = c => ((c || 0) / 100).toLocaleString("pt-BR", {minimumFractionDigits:2, maximumFractionDigits:2});
+function parseMoney(s){
+  s = String(s ?? "").replace(/[R$\s]/g, "");
+  if (!s) return 0;
+  if (s.includes(",")) s = s.replace(/\./g, "").replace(",", ".");
+  const n = Number(s);
+  return Number.isFinite(n) ? Math.round(n * 100) : NaN;
+}
+const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const fdate = iso => iso ? `${iso.slice(8,10)}/${iso.slice(5,7)}/${iso.slice(0,4)}` : "";
+const fdateShort = iso => iso ? `${iso.slice(8,10)}/${iso.slice(5,7)}` : "";
+const MES = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+const fmonth = key => `${MES[+key.slice(5,7)-1].slice(0,3)}/${key.slice(0,4)}`;
+const fmonthLong = key => { const m = MES[+key.slice(5,7)-1]; return `${m[0].toUpperCase()+m.slice(1)} de ${key.slice(0,4)}`; };
+function addMonthsKey(key, n){ let y = +key.slice(0,4), m = +key.slice(5,7) - 1 + n; y += Math.floor(m / 12); m = ((m % 12) + 12) % 12; return `${y}-${pad(m+1)}`; }
+const lastDay = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+const dateIn = (key, day) => `${key}-${pad(Math.min(+day || 1, lastDay(+key.slice(0,4), +key.slice(5,7))))}`;
+const addMonthsDate = (iso, n) => dateIn(addMonthsKey(iso.slice(0,7), n), +iso.slice(8,10));
+function addDays(iso, n){ const d = new Date(Date.UTC(+iso.slice(0,4), +iso.slice(5,7)-1, +iso.slice(8,10) + n)); return d.toISOString().slice(0,10); }
+const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
+
+/* ---------- estado ---------- */
+const COLS = ["accounts", "cards", "categories", "transactions"];
+const S = {
+  data: Object.fromEntries(COLS.map(c => [c, new Map()])),
+  mode: "loading", loaded: false, stale: false,
+  route: "painel", month: todayISO().slice(0,7), acctMonth: todayISO().slice(0,7),
+  selAccount: null, selCard: null, invKey: {},
+  f: {kind:"", status:"", cat:"", src:"", q:""}
+};
+const L = col => [...S.data[col].values()];
+const get = (col, id) => S.data[col].get(id);
+const byDate = (a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : (a.createdAt || 0) - (b.createdAt || 0));
+
+/* ---------- armazenamento (conta Claude ou navegador) ---------- */
+const LS_KEY = "livro-caixa-v1";
+const Store = {
+  cloud: null,
+  saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(Object.fromEntries(COLS.map(c => [c, L(c)])))); } catch { toast("Não foi possível salvar neste navegador."); } },
+  loadLocal(){ try { const raw = localStorage.getItem(LS_KEY); if (!raw) return; const o = JSON.parse(raw); COLS.forEach(c => { S.data[c] = new Map((o[c] || []).map(x => [x.id, x])); }); } catch {} },
+  async write(col, obj){
+    const {id, ...rest} = obj;
+    if (this.cloud) await this.cloud.collection(col).doc(id).set(rest);
+  },
+  async put(col, obj, quiet){
+    S.data[col].set(obj.id, obj);
+    if (!quiet) render();
+    if (this.cloud) { try { await this.write(col, obj); } catch (e) { toast(dbErr(e)); } }
+    else this.saveLocal();
+  },
+  async remove(col, id, quiet){
+    S.data[col].delete(id);
+    if (!quiet) render();
+    if (this.cloud) { try { await this.cloud.collection(col).doc(id).delete(); } catch (e) { toast(dbErr(e)); } }
+    else this.saveLocal();
+  },
+  async putMany(list){ // [{col,obj}]
+    list.forEach(({col, obj}) => S.data[col].set(obj.id, obj));
+    render();
+    if (!this.cloud) return this.saveLocal();
+    for (let i = 0; i < list.length; i += 5) {
+      try { await Promise.all(list.slice(i, i + 5).map(({col, obj}) => this.write(col, obj))); }
+      catch (e) { toast(dbErr(e)); return; }
+    }
+  },
+  async removeMany(list){ // [{col,id}]
+    list.forEach(({col, id}) => S.data[col].delete(id));
+    render();
+    if (!this.cloud) return this.saveLocal();
+    for (let i = 0; i < list.length; i += 5) {
+      try { await Promise.all(list.slice(i, i + 5).map(({col, id}) => this.cloud.collection(col).doc(id).delete())); }
+      catch (e) { toast(dbErr(e)); return; }
+    }
+  }
+};
+function dbErr(e){
+  const c = e && e.code;
+  if (c === "quota_exceeded") return "O espaço de armazenamento está cheio. Exclua lançamentos antigos para continuar.";
+  if (c === "resource_exhausted") return "Muitas operações seguidas. Aguarde alguns segundos e tente de novo.";
+  if (c === "invalid_argument") return "Você não tem permissão para salvar dados nesta página.";
+  return "Não foi possível salvar agora. Verifique a conexão e tente de novo.";
+}
+
+async function boot(){
+  render();
+  const useLocal = note => {
+    Store.loadLocal(); S.mode = "local"; S.loaded = true; S.note = note || "";
+    render();
+  };
+  if (!window.claude || typeof window.claude.use !== "function") return useLocal();
+  let db = null, user = null, uid = null;
+  try { [db, user] = await Promise.all([window.claude.use("db"), window.claude.use("user")]); uid = user ? await user.id() : null; } catch {}
+  if (!db || !uid) return useLocal("Entre na sua conta Claude para guardar os dados com segurança. Por enquanto, eles ficam só neste navegador.");
+  const base = db.doc(`data/users/${uid}/ledger`);
+  Store.cloud = base; S.mode = "cloud";
+  const got = new Set(); const fresh = new Set();
+  const timer = setTimeout(() => { if (fresh.size < COLS.length) { S.stale = true; render(); } }, 10000);
+  COLS.forEach(col => {
+    base.collection(col).onSnapshot(snap => {
+      S.data[col] = new Map(snap.docs.map(d => [d.id, {...d.data(), id: d.id}]));
+      got.add(col); if (!snap.metadata.fromCache) fresh.add(col);
+      if (got.size === COLS.length) S.loaded = true;
+      if (fresh.size === COLS.length) { clearTimeout(timer); S.stale = false; }
+      render();
+    }, () => { clearTimeout(timer); S.loaded = true; S.stale = true; render(); });
+  });
+}
+
+/* ---------- regras de negócio ---------- */
+// Fatura identificada pelo mês de vencimento (AAAA-MM).
+function invoiceFor(card, iso){
+  let closeKey = iso.slice(0,7);
+  if (iso >= dateIn(closeKey, card.closingDay)) closeKey = addMonthsKey(closeKey, 1);
+  return +card.dueDay > +card.closingDay ? closeKey : addMonthsKey(closeKey, 1);
+}
+function invoiceDates(card, key){
+  const closeKey = +card.dueDay > +card.closingDay ? key : addMonthsKey(key, -1);
+  return {due: dateIn(key, card.dueDay), closing: dateIn(closeKey, card.closingDay)};
+}
+function invoiceSummary(card, key){
+  let total = 0, paid = 0, scheduled = 0; const items = [], payments = [];
+  for (const t of L("transactions")) {
+    if (t.cardId !== card.id || t.invoice !== key) continue;
+    if (t.kind === "cartao_despesa") { total += t.amount; items.push(t); }
+    else if (t.kind === "cartao_estorno") { total -= t.amount; items.push(t); }
+    else if (t.kind === "pagamento_fatura") { payments.push(t); if (t.status === "efetivada") paid += t.amount; else scheduled += t.amount; }
+  }
+  const {due, closing} = invoiceDates(card, key); const today = todayISO();
+  const remaining = total - paid;
+  let status;
+  if (today < closing) status = "aberta";
+  else if (remaining <= 0) status = total > 0 || paid > 0 ? "paga" : "vazia";
+  else if (today > due) status = "vencida";
+  else status = "fechada";
+  return {key, total, paid, scheduled, remaining, due, closing, status, items: items.sort(byDate), payments: payments.sort(byDate)};
+}
+const INV_PILL = {aberta:["acc","Aberta"], fechada:["warn","Fechada"], vencida:["neg","Vencida"], paga:["pos","Paga"], vazia:["","Sem lançamentos"]};
+function cardKeys(card){ const s = new Set(); L("transactions").forEach(t => { if (t.cardId === card.id && t.invoice) s.add(t.invoice); }); return [...s].sort(); }
+function cardUsed(card){ return sum(cardKeys(card), k => Math.max(0, invoiceSummary(card, k).remaining)); }
+
+function txEffect(t, accId, projected){
+  if (!projected && t.status !== "efetivada") return 0;
+  const a = t.amount || 0;
+  switch (t.kind) {
+    case "receita": return t.accountId === accId ? a : 0;
+    case "despesa": case "pagamento_fatura": return t.accountId === accId ? -a : 0;
+    case "transferencia": return (t.toAccountId === accId ? a : 0) - (t.accountId === accId ? a : 0);
+  }
+  return 0;
+}
+function balance(acc, {projected = false, before = null} = {}){
+  let b = acc.initial || 0;
+  for (const t of L("transactions")) { if (before && t.date >= before) continue; b += txEffect(t, acc.id, projected); }
+  return b;
+}
+const PENDABLE = ["despesa", "receita", "transferencia", "pagamento_fatura"];
+function agenda(){
+  const out = [];
+  for (const t of L("transactions")) {
+    if (t.status === "pendente" && PENDABLE.includes(t.kind))
+      out.push({key: t.id, dir: t.kind === "receita" ? "in" : t.kind === "transferencia" ? "move" : "out", date: t.date, amount: t.amount, title: t.description, t});
+  }
+  for (const card of L("cards")) for (const k of cardKeys(card)) {
+    const s = invoiceSummary(card, k); const open = s.remaining - s.scheduled;
+    if (open > 0) out.push({key: `inv-${card.id}-${k}`, dir: "out", date: s.due, amount: open, title: `Fatura ${card.name} · ${fmonth(k)}`, inv: {cardId: card.id, key: k, s}});
+  }
+  return out.sort((a, b) => a.date < b.date ? -1 : a.date > b.date ? 1 : 0);
+}
+function spendByCategory(m){
+  const map = new Map();
+  for (const t of L("transactions")) {
+    if (!t.date || !t.date.startsWith(m)) continue;
+    let v = 0;
+    if (t.kind === "despesa" && t.status === "efetivada") v = t.amount;
+    else if (t.kind === "cartao_despesa") v = t.amount;
+    else if (t.kind === "cartao_estorno") v = -t.amount;
+    if (v) map.set(t.categoryId || "", (map.get(t.categoryId || "") || 0) + v);
+  }
+  return [...map.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+}
+function txSign(t, accId){
+  if (accId) return Math.sign(txEffect(t, accId, true));
+  return {receita: 1, despesa: -1, pagamento_fatura: -1, cartao_despesa: -1, cartao_estorno: 1}[t.kind] || 0;
+}
+function srcLabel(t){
+  const a = get("accounts", t.accountId), c = get("cards", t.cardId);
+  if (t.kind === "transferencia") return `${a ? a.name : "?"} → ${get("accounts", t.toAccountId)?.name || "?"}`;
+  if (t.kind === "pagamento_fatura") return `${a ? a.name : "?"} · fatura ${c ? c.name : ""} ${t.invoice ? fmonth(t.invoice) : ""}`;
+  if (c) return `${c.name} · fatura ${fmonth(t.invoice)}`;
+  return a ? a.name : "";
+}
+const KIND_LABEL = {despesa:"Despesa", receita:"Receita", transferencia:"Transferência", cartao_despesa:"Compra no cartão", cartao_estorno:"Estorno", pagamento_fatura:"Pagamento de fatura"};
+
+/* ---------- ícones ---------- */
+const ICON = {
+  painel:'<path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',
+  contas:'<path d="M3 9l9-5 9 5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18"/>',
+  cartoes:'<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M7 15h4"/>',
+  lancamentos:'<path d="M8 6h13M8 12h13M8 18h13M3.5 6h.01M3.5 12h.01M3.5 18h.01"/>',
+  agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
+  categorias:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
+  ajustes:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  mais:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'
+};
+const svg = k => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
+const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["categorias","Categorias"],["ajustes","Ajustes"]];
+const BOTTOM = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançam."],["agenda","Agenda"],["mais","Mais"]];
+const COLORS = ["#0d5c4c","#2f6fb0","#7b4bb3","#b0397a","#c2542d","#a87b00","#4f7d2a","#5b6b65"];
+
+/* ---------- componentes ---------- */
+const btnNew = `<button class="btn primary" data-act="new-tx">+ Novo lançamento</button>`;
+const head = (title, sub, actions = btnNew) => `<header class="phead"><div><h1>${title}</h1>${sub ? `<p class="sub">${sub}</p>` : ""}</div><div class="hact">${actions}</div></header>`;
+const monthNav = (key, act) => `<div class="mnav"><button class="icon-btn" data-act="${act}" data-d="-1" aria-label="Mês anterior">‹</button><strong>${fmonthLong(key)}</strong><button class="icon-btn" data-act="${act}" data-d="1" aria-label="Próximo mês">›</button></div>`;
+const catChip = id => { const c = get("categories", id); return c ? `<span class="chip"><i class="dot" style="background:${esc(c.color)}"></i>${esc(c.name)}</span>` : ""; };
+function statusPill(t){
+  if (t.status !== "pendente") return "";
+  return t.date < todayISO() ? `<span class="pill neg">Vencida</span>` : `<span class="pill warn">Pendente</span>`;
+}
+function txRow(t, {accId = null, running = null, showSrc = true, actions = true} = {}){
+  const sg = txSign(t, accId);
+  const cls = sg > 0 ? "pos" : sg < 0 ? "neg" : "";
+  const sign = sg > 0 ? "+" : sg < 0 ? "−" : "";
+  const meta = [
+    t.kind === "cartao_estorno" ? `<span class="pill pos">Estorno</span>` : "",
+    t.kind === "transferencia" ? `<span class="pill">Transferência</span>` : "",
+    t.kind === "pagamento_fatura" ? `<span class="pill">Pagamento de fatura</span>` : "",
+    statusPill(t), catChip(t.categoryId),
+    showSrc ? `<span class="chip">${esc(srcLabel(t))}</span>` : ""
+  ].join("");
+  const act = actions && t.status === "pendente" && PENDABLE.includes(t.kind)
+    ? `<div class="r-act"><button class="btn sm primary" data-act="settle" data-id="${t.id}">${t.kind === "receita" ? "Receber" : t.kind === "transferencia" ? "Efetivar" : "Pagar"}</button></div>` : "";
+  return `<div class="row${running != null ? " has-bal" : ""}${t.status === "pendente" ? " is-pend" : ""}" data-act="edit-tx" data-id="${t.id}" tabindex="0" role="button">
+    <div class="r-date">${fdateShort(t.date)}</div>
+    <div class="r-main"><div class="r-title">${esc(t.description)}</div><div class="r-meta">${meta}</div></div>
+    <div class="r-amt ${cls}">${sign}${money(t.amount)}</div>
+    ${running != null ? `<div class="r-bal" title="Saldo após o lançamento">${money(running)}</div>` : ""}
+    ${act}
+  </div>`;
+}
+function agendaRow(i){
+  const today = todayISO();
+  const late = i.date < today;
+  const cls = i.dir === "in" ? "pos" : i.dir === "out" ? "neg" : "";
+  if (i.t) return txRow(i.t, {showSrc: true});
+  const card = get("cards", i.inv.cardId);
+  return `<div class="row" data-act="open-invoice" data-card="${i.inv.cardId}" data-key="${i.inv.key}" tabindex="0" role="button">
+    <div class="r-date">${fdateShort(i.date)}</div>
+    <div class="r-main"><div class="r-title">${esc(i.title)}</div><div class="r-meta">${late ? `<span class="pill neg">Vencida</span>` : `<span class="pill ${INV_PILL[i.inv.s.status][0]}">${INV_PILL[i.inv.s.status][1]}</span>`}<span class="chip">Fecha ${fdateShort(i.inv.s.closing)} · vence ${fdate(i.inv.s.due)}</span>${i.inv.s.scheduled ? `<span class="chip">${money(i.inv.s.scheduled)} agendado</span>` : ""}</div></div>
+    <div class="r-amt ${cls}">−${money(i.amount)}</div>
+    <div class="r-act"><button class="btn sm primary" data-act="pay-invoice" data-card="${card ? card.id : ""}" data-key="${i.inv.key}">Pagar</button></div>
+  </div>`;
+}
+
+/* ---------- telas ---------- */
+function onboarding(){
+  const hasCats = L("categories").length > 0;
+  return `<section class="panel onb">
+    <h2>Comece pelo cadastro</h2>
+    <p class="muted">O Livro-Caixa organiza suas contas bancárias, cartões de crédito e contas a pagar e receber em um só lugar.</p>
+    <ol>
+      <li>Cadastre suas contas bancárias com o saldo de hoje.</li>
+      <li>Cadastre seus cartões com o dia de fechamento e de vencimento da fatura.</li>
+      <li>Lance despesas, receitas e compras no cartão. Use “pendente” para o que ainda vai pagar ou receber.</li>
+    </ol>
+    <div class="hact">
+      <button class="btn primary" data-act="new-account">Cadastrar conta</button>
+      <button class="btn" data-act="new-card">Cadastrar cartão</button>
+      ${hasCats ? "" : `<button class="btn" data-act="default-cats">Criar categorias padrão</button>`}
+    </div>
+    <p class="small muted">Quer ver como funciona antes? <button class="linkbtn" data-act="sample">Carregar dados de exemplo</button>. Você pode apagá-los depois em Ajustes.</p>
+  </section>`;
+}
+
+function vPainel(){
+  const accs = L("accounts"), cards = L("cards");
+  if (!accs.length && !cards.length && !L("transactions").length) return head("Painel", "Visão geral das suas finanças") + onboarding();
+  const today = todayISO();
+  const atual = sum(accs, a => balance(a));
+  const ag = agenda();
+  const aReceber = sum(ag.filter(i => i.dir === "in"), i => i.amount);
+  const aPagar = sum(ag.filter(i => i.dir === "out"), i => i.amount);
+  const late = ag.filter(i => i.date < today && i.dir !== "move");
+  const upcoming = ag.filter(i => i.date <= addDays(today, 30)).slice(0, 8);
+  const m = today.slice(0,7);
+  const cats = spendByCategory(m); const maxC = cats.length ? cats[0][1] : 1; const totC = sum(cats, c => c[1]);
+  return head("Painel", `Hoje, ${fdate(today)}`) + `
+  ${late.length ? `<p class="banner">${late.length} ${late.length === 1 ? "conta vencida" : "contas vencidas"} somando ${money(sum(late, i => i.amount))}. <button class="linkbtn" data-act="nav" data-r="agenda">Ver agenda</button></p>` : ""}
+  <section class="kpis" aria-label="Resumo">
+    <div class="kpi"><div class="eyebrow">Saldo em contas</div><div class="v ${atual < 0 ? "neg" : ""}">${money(atual)}</div><div class="h">Só lançamentos efetivados</div></div>
+    <div class="kpi"><div class="eyebrow">A receber</div><div class="v pos">${money(aReceber)}</div><div class="h">${(n => `${n} ${n === 1 ? "pendente" : "pendentes"}`)(ag.filter(i => i.dir === "in").length)}</div></div>
+    <div class="kpi"><div class="eyebrow">A pagar</div><div class="v neg">${money(aPagar)}</div><div class="h">Contas pendentes e faturas</div></div>
+    <div class="kpi"><div class="eyebrow">Saldo previsto</div><div class="v ${atual + aReceber - aPagar < 0 ? "neg" : ""}">${money(atual + aReceber - aPagar)}</div><div class="h">Depois de pagar e receber tudo</div></div>
+  </section>
+  <div class="grid2">
+    <section class="panel"><div class="panel-h"><h2>Próximos 30 dias</h2><button class="linkbtn" data-act="nav" data-r="agenda">Ver tudo</button></div>
+      <div class="rows">${upcoming.length ? upcoming.map(agendaRow).join("") : `<p class="empty">Nada pendente para os próximos 30 dias.</p>`}</div>
+    </section>
+    <section class="panel"><div class="panel-h"><h2>Despesas de ${MES[+m.slice(5,7)-1]}</h2><span class="num muted">${money(totC)}</span></div>
+      ${cats.length ? `<div class="cbars">${cats.slice(0, 8).map(([id, v]) => { const c = get("categories", id); return `<div class="cbar" title="${esc(c ? c.name : "Sem categoria")}: ${money(v)} (${Math.round(v / totC * 100)}%)"><span class="lbl"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(c ? c.name : "Sem categoria")}</span><span class="track"><i style="width:${(v / maxC * 100).toFixed(1)}%"></i></span><span class="num small">${money(v)}</span></div>`; }).join("")}</div><p class="small muted" style="margin-top:12px">Despesas efetivadas nas contas mais compras no cartão do mês, já descontados os estornos.</p>` : `<p class="empty">Nenhuma despesa lançada neste mês.</p>`}
+    </section>
+  </div>
+  <div class="grid2">
+    <section class="panel"><div class="panel-h"><h2>Contas</h2><button class="linkbtn" data-act="nav" data-r="contas">Abrir</button></div>
+      <div class="list-simple">${accs.length ? accs.map(a => `<div><span class="chip" style="color:var(--ink)"><i class="dot" style="background:${esc(a.color)}"></i>${esc(a.name)}</span><span class="num ${balance(a) < 0 ? "neg" : ""}">${money(balance(a))}</span></div>`).join("") : `<p class="empty">Nenhuma conta cadastrada.</p>`}</div>
+    </section>
+    <section class="panel"><div class="panel-h"><h2>Faturas atuais</h2><button class="linkbtn" data-act="nav" data-r="cartoes">Abrir</button></div>
+      <div class="list-simple">${cards.length ? cards.map(c => { const s = invoiceSummary(c, invoiceFor(c, today)); return `<div><span><span class="chip" style="color:var(--ink)"><i class="dot" style="background:${esc(c.color)}"></i>${esc(c.name)}</span><br><span class="small muted">Vence ${fdate(s.due)}</span></span><span class="num">${money(s.total)}</span></div>`; }).join("") : `<p class="empty">Nenhum cartão cadastrado.</p>`}</div>
+    </section>
+  </div>`;
+}
+
+function vContas(){
+  const accs = L("accounts");
+  if (!S.selAccount || !get("accounts", S.selAccount)) S.selAccount = accs[0]?.id || null;
+  const tiles = accs.map(a => { const b = balance(a), p = balance(a, {projected: true}); return `<button class="tile" data-act="sel-account" data-id="${a.id}" aria-pressed="${a.id === S.selAccount}">
+    <span class="t-name"><i class="dot" style="background:${esc(a.color)}"></i>${esc(a.name)}</span>
+    <span class="t-sub">${esc([a.bank, a.type].filter(Boolean).join(" · "))}</span>
+    <span class="t-val ${b < 0 ? "neg" : ""}">${money(b)}</span>
+    <span class="t-sub">Previsto: <span class="num">${money(p)}</span></span></button>`; }).join("");
+  let detail = "";
+  const a = get("accounts", S.selAccount);
+  if (a) {
+    const m = S.acctMonth, start = `${m}-01`, next = `${addMonthsKey(m, 1)}-01`;
+    const opening = balance(a, {before: start});
+    const rows = L("transactions").filter(t => t.status === "efetivada" && txEffect(t, a.id, true) !== 0 && t.date >= start && t.date < next).sort(byDate);
+    let run = opening;
+    const html = rows.map(t => { run += txEffect(t, a.id, false); return txRow(t, {accId: a.id, running: run, showSrc: t.kind === "transferencia" || t.kind === "pagamento_fatura"}); }).join("");
+    const pend = L("transactions").filter(t => t.status === "pendente" && txEffect(t, a.id, true) !== 0).sort(byDate);
+    const inSum = sum(rows, t => Math.max(0, txEffect(t, a.id))), outSum = sum(rows, t => Math.min(0, txEffect(t, a.id)));
+    detail = `<section class="panel">
+      <div class="panel-h"><div><h2>Extrato · ${esc(a.name)}</h2><p class="small muted">Só lançamentos efetivados alteram o saldo.</p></div>
+        <div class="hact">${monthNav(m, "acct-month")}<button class="btn sm" data-act="edit-account" data-id="${a.id}">Editar conta</button></div></div>
+      <div class="rowline"><span>Saldo em ${fdate(addDays(start, -1))}</span><span class="num">${money(opening)}</span></div>
+      <div class="rows">${html || `<p class="empty">Nenhuma movimentação efetivada em ${MES[+m.slice(5,7)-1]}.</p>`}</div>
+      <div class="rowline"><span>Entradas <span class="num pos">${money(inSum)}</span> · Saídas <span class="num neg">${money(-outSum)}</span></span><strong class="num">${money(run)}</strong></div>
+    </section>
+    <section class="panel"><h2>Pendentes nesta conta</h2>
+      <div class="rows">${pend.length ? pend.map(t => txRow(t, {accId: a.id, showSrc: false})).join("") : `<p class="empty">Nenhum lançamento pendente.</p>`}</div>
+    </section>`;
+  }
+  return head("Contas bancárias", accs.length ? `Saldo total: <span class="num">${money(sum(accs, x => balance(x)))}</span>` : "", `<button class="btn" data-act="new-account">+ Conta</button>${btnNew}`) +
+    `<div class="tiles">${tiles}<button class="tile add" data-act="new-account">+ Cadastrar conta</button></div>` + detail;
+}
+
+function vCartoes(){
+  const cards = L("cards");
+  if (!S.selCard || !get("cards", S.selCard)) S.selCard = cards[0]?.id || null;
+  const today = todayISO();
+  const tiles = cards.map(c => { const used = cardUsed(c); const pct = c.limit ? Math.min(100, used / c.limit * 100) : 0; return `<button class="tile" data-act="sel-card" data-id="${c.id}" aria-pressed="${c.id === S.selCard}">
+    <span class="t-name"><i class="dot" style="background:${esc(c.color)}"></i>${esc(c.name)}</span>
+    <span class="t-sub">Fecha dia ${c.closingDay} · vence dia ${c.dueDay}</span>
+    <span class="t-val">${money(invoiceSummary(c, invoiceFor(c, today)).total)}</span>
+    ${c.limit ? `<span class="t-sub">Disponível ${money(c.limit - used)} de ${money(c.limit)}</span><span class="bar"><i class="${pct > 85 ? "hot" : ""}" style="width:${pct.toFixed(1)}%"></i></span>` : `<span class="t-sub">Fatura atual</span>`}</button>`; }).join("");
+  let detail = "";
+  const c = get("cards", S.selCard);
+  if (c) {
+    const key = S.invKey[c.id] || invoiceFor(c, today);
+    const s = invoiceSummary(c, key);
+    const [pc, pl] = INV_PILL[s.status];
+    detail = `<section class="panel">
+      <div class="panel-h"><div><h2>Fatura ${esc(c.name)}</h2></div>
+        <div class="hact"><div class="mnav"><button class="icon-btn" data-act="inv-nav" data-d="-1" aria-label="Fatura anterior">‹</button><strong>${fmonthLong(key)}</strong><button class="icon-btn" data-act="inv-nav" data-d="1" aria-label="Próxima fatura">›</button></div>
+        <button class="btn sm" data-act="edit-card" data-id="${c.id}">Editar cartão</button></div></div>
+      <div class="inv-sum">
+        <div><div class="eyebrow">Total</div><div class="v">${money(s.total)}</div><span class="pill ${pc}">${pl}</span></div>
+        <div><div class="eyebrow">Fechamento</div><div class="v">${fdate(s.closing)}</div></div>
+        <div><div class="eyebrow">Vencimento</div><div class="v">${fdate(s.due)}</div></div>
+        <div><div class="eyebrow">Pago</div><div class="v ${s.paid ? "pos" : ""}">${money(s.paid)}</div>${s.scheduled ? `<span class="small muted">${money(s.scheduled)} agendado</span>` : ""}</div>
+      </div>
+      <div class="hact" style="margin:8px 0 6px">
+        <button class="btn sm" data-act="new-card-tx" data-card="${c.id}" data-k="cartao_despesa">+ Compra</button>
+        <button class="btn sm" data-act="new-card-tx" data-card="${c.id}" data-k="cartao_estorno">+ Estorno</button>
+        ${s.remaining - s.scheduled > 0 ? `<button class="btn sm primary" data-act="pay-invoice" data-card="${c.id}" data-key="${key}">Pagar fatura</button>` : ""}
+      </div>
+      <div class="rows">${s.items.length ? s.items.map(t => txRow(t, {showSrc: false})).join("") : `<p class="empty">Nenhum lançamento nesta fatura.</p>`}</div>
+      ${s.payments.length ? `<h3 style="margin-top:16px">Pagamentos</h3><div class="rows">${s.payments.map(t => txRow(t, {showSrc: true})).join("")}</div>` : ""}
+    </section>`;
+  }
+  return head("Cartões de crédito", "", `<button class="btn" data-act="new-card">+ Cartão</button>${btnNew}`) +
+    `<div class="tiles">${tiles}<button class="tile add" data-act="new-card">+ Cadastrar cartão</button></div>` + detail;
+}
+
+function lancFiltered(){
+  const m = S.month, f = S.f, q = f.q.trim().toLowerCase();
+  return L("transactions").filter(t => {
+    if (!t.date || !t.date.startsWith(m)) return false;
+    if (f.kind && t.kind !== f.kind) return false;
+    if (f.status && (t.status || "efetivada") !== f.status) return false;
+    if (f.cat && t.categoryId !== f.cat) return false;
+    if (f.src && t.accountId !== f.src && t.toAccountId !== f.src && t.cardId !== f.src) return false;
+    if (q && !(`${t.description} ${t.notes || ""}`.toLowerCase().includes(q))) return false;
+    return true;
+  }).sort(byDate);
+}
+function lancList(){
+  const rows = lancFiltered();
+  const tot = sum(rows, t => txSign(t) * t.amount);
+  return `<div class="rows">${rows.length ? rows.map(t => txRow(t)).join("") : `<p class="empty">Nenhum lançamento encontrado para este mês e filtros.</p>`}</div>
+    <div class="rowline"><span>${rows.length} lançamento${rows.length === 1 ? "" : "s"}</span><span>Resultado <strong class="num ${tot < 0 ? "neg" : "pos"}">${money(tot)}</strong></span></div>`;
+}
+function vLancamentos(){
+  const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`;
+  const f = S.f;
+  return head("Lançamentos", "Todas as movimentações do mês, de contas e cartões") + `
+  <section class="panel">
+    <div class="panel-h">${monthNav(S.month, "month")}</div>
+    <div class="filters" style="margin-bottom:10px">
+      <input type="search" id="f-q" placeholder="Buscar descrição" value="${esc(f.q)}" aria-label="Buscar">
+      <select id="f-kind" aria-label="Tipo">${opt("", "Todos os tipos", f.kind)}${Object.entries(KIND_LABEL).map(([v, l]) => opt(v, l, f.kind)).join("")}</select>
+      <select id="f-status" aria-label="Situação">${opt("", "Todas as situações", f.status)}${opt("efetivada", "Efetivadas", f.status)}${opt("pendente", "Pendentes", f.status)}</select>
+      <select id="f-cat" aria-label="Categoria">${opt("", "Todas as categorias", f.cat)}${L("categories").sort((a, b) => a.name.localeCompare(b.name)).map(c => opt(c.id, c.name, f.cat)).join("")}</select>
+      <select id="f-src" aria-label="Conta ou cartão">${opt("", "Contas e cartões", f.src)}${L("accounts").map(a => opt(a.id, a.name, f.src)).join("")}${L("cards").map(c => opt(c.id, "Cartão " + c.name, f.src)).join("")}</select>
+    </div>
+    <div id="lanc-list">${lancList()}</div>
+  </section>`;
+}
+
+function vAgenda(){
+  const today = todayISO(), wk = addDays(today, 7);
+  const ag = agenda();
+  const block = (dir, title) => {
+    const items = ag.filter(i => dir === "out" ? i.dir !== "in" : i.dir === "in");
+    const groups = [["Vencidos", items.filter(i => i.date < today)], ["Próximos 7 dias", items.filter(i => i.date >= today && i.date <= wk)], ["Depois", items.filter(i => i.date > wk)]];
+    const total = sum(items.filter(i => i.dir !== "move"), i => i.amount);
+    return `<section class="panel"><div class="panel-h"><h2>${title}</h2><span class="num ${dir === "in" ? "pos" : "neg"}">${money(total)}</span></div>
+      ${items.length ? groups.filter(g => g[1].length).map(([g, list]) => `<p class="eyebrow" style="margin:10px 0 2px">${g}</p><div class="rows">${list.map(agendaRow).join("")}</div>`).join("") : `<p class="empty">Nada ${dir === "in" ? "a receber" : "a pagar"}.</p>`}
+    </section>`;
+  };
+  return head("A pagar e receber", "Pendentes não alteram o saldo até serem efetivados") + `<div class="grid2">${block("out", "Contas a pagar")}${block("in", "Contas a receber")}</div>`;
+}
+
+function vCategorias(){
+  const cats = L("categories").sort((a, b) => a.name.localeCompare(b.name));
+  const used = id => L("transactions").filter(t => t.categoryId === id).length;
+  const list = type => { const l = cats.filter(c => c.type === type); return l.length ? `<div class="list-simple">${l.map(c => `<div><span class="chip" style="color:var(--ink)"><i class="dot" style="background:${esc(c.color)}"></i>${esc(c.name)}</span><span class="hact"><span class="small muted">${used(c.id)} lanç.</span><button class="btn sm" data-act="edit-cat" data-id="${c.id}">Editar</button></span></div>`).join("")}</div>` : `<p class="empty">Nenhuma categoria.</p>`; };
+  return head("Categorias", "Usadas para classificar despesas e receitas", `${cats.length ? "" : `<button class="btn" data-act="default-cats">Criar categorias padrão</button>`}<button class="btn primary" data-act="new-cat">+ Categoria</button>`) +
+    `<div class="grid2"><section class="panel"><h2>Despesas</h2>${list("despesa")}</section><section class="panel"><h2>Receitas</h2>${list("receita")}</section></div>`;
+}
+
+function vAjustes(){
+  const n = L("transactions").length;
+  return head("Ajustes", "", "") + `
+  <section class="panel"><h2>Onde seus dados ficam</h2>
+    <p>${S.mode === "cloud" ? "Na sua conta Claude, em uma área privada desta página. Só você vê esses dados, e eles aparecem em qualquer aparelho em que você abrir a página." : "Só neste navegador. Se limpar os dados do navegador ou trocar de aparelho, eles não vão junto. Faça backups com frequência."}</p>
+    <p class="small muted" style="margin-top:6px">${L("accounts").length} contas · ${L("cards").length} cartões · ${L("categories").length} categorias · ${n} lançamentos</p>
+  </section>
+  <section class="panel"><h2>Backup</h2>
+    <p class="muted" style="margin-bottom:10px">Copie seus dados em formato JSON para guardar, ou importe um backup feito antes. Importar junta os dados e substitui os itens com o mesmo identificador.</p>
+    <div class="hact"><button class="btn" data-act="export">Copiar backup</button><label class="btn" for="import-file">Importar backup</label><input type="file" id="import-file" accept="application/json,.json" hidden></div>
+    <textarea id="export-box" readonly hidden style="margin-top:10px;min-height:120px;font-family:var(--f-mono);font-size:.78rem"></textarea>
+  </section>
+  <section class="panel"><h2>Dados</h2>
+    <div class="hact">
+      <button class="btn" data-act="default-cats">Adicionar categorias padrão</button>
+      <button class="btn" data-act="sample">Carregar dados de exemplo</button>
+      <button class="btn danger" data-act="wipe">Apagar todos os dados</button>
+    </div>
+  </section>`;
+}
+function vMais(){
+  return head("Mais", "", "") + `<section class="panel"><div class="list-simple">
+    <div><a class="linkbtn" href="#categorias">Categorias</a><span class="muted small">${L("categories").length}</span></div>
+    <div><a class="linkbtn" href="#ajustes">Ajustes, backup e dados</a></div>
+  </div></section>`;
+}
+
+/* ---------- render ---------- */
+const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
+function render(){
+  $("#nav-side").innerHTML = ROUTES.map(([r, l]) => `<a href="#${r}" ${S.route === r ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
+  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
+  $("#store-note").textContent = S.mode === "cloud" ? "Dados salvos na sua conta, visíveis só para você." : S.mode === "local" ? "Dados salvos só neste navegador." : "Carregando…";
+  const v = $("#view");
+  if (!S.loaded) { v.innerHTML = head("Livro-Caixa", "Carregando seus dados…", "") + `<section class="panel"><p class="muted">Buscando contas, cartões e lançamentos.</p></section>`; return; }
+  const banners = (S.note ? `<p class="banner">${esc(S.note)}</p>` : "") + (S.stale ? `<p class="banner">Não foi possível confirmar seus dados com o servidor. O que aparece pode estar desatualizado.</p>` : "");
+  v.innerHTML = banners + (VIEWS[S.route] || vPainel)();
+}
+function route(){
+  const h = location.hash.replace("#", "");
+  S.route = VIEWS[h] ? h : "painel";
+  render(); window.scrollTo(0, 0);
+}
+
+/* ---------- modal ---------- */
+const dlg = $("#dlg"), form = $("#dlg-form");
+let M = null; // {onSubmit, onChange, onInput}
+function openModal({title, body, foot, onSubmit, onChange}){
+  M = {onSubmit, onChange};
+  $("#dlg-title").textContent = title;
+  $("#dlg-body").innerHTML = body;
+  $("#dlg-foot").innerHTML = foot;
+  $("#dlg-err").hidden = true;
+  if (!dlg.open) dlg.showModal();
+  const first = $("#dlg-body").querySelector("input:not([type=radio]):not([type=hidden]),select,textarea");
+  if (first) first.focus();
+}
+const closeModal = () => { if (dlg.open) dlg.close(); M = null; };
+const showErr = msg => { const e = $("#dlg-err"); e.textContent = msg; e.hidden = false; };
+const formData = () => Object.fromEntries(new FormData(form));
+form.addEventListener("submit", e => {
+  e.preventDefault();
+  if (!M || !M.onSubmit) return;
+  const r = M.onSubmit(formData(), e.submitter);
+  if (typeof r === "string") showErr(r); else if (r !== false) closeModal();
+});
+form.addEventListener("change", e => { if (M && M.onChange) M.onChange(e); });
+dlg.addEventListener("close", () => { M = null; });
+const footSave = (label = "Salvar", extra = "") => `${extra}<button type="button" class="btn" data-act="close">Cancelar</button><button type="submit" class="btn primary">${label}</button>`;
+function confirmFoot(msg, act, label = "Excluir", extraBtn = ""){
+  $("#dlg-foot").innerHTML = `<div class="confirm"><p>${msg}</p><button type="button" class="btn" data-act="cancel-confirm">Voltar</button>${extraBtn}<button type="button" class="btn danger solid" data-act="${act}">${label}</button></div>`;
+}
+
+const field = (label, inner, hint = "") => `<label class="field"><span>${label}</span>${inner}${hint ? `<small class="hint">${hint}</small>` : ""}</label>`;
+const opts = (list, cur, empty) => (empty != null ? `<option value="">${esc(empty)}</option>` : "") + list.map(x => `<option value="${esc(x.id)}" ${x.id === cur ? "selected" : ""}>${esc(x.name)}</option>`).join("");
+const radios = (name, list, cur) => `<div class="seg" role="radiogroup">${list.map(([v, l]) => `<label><input type="radio" name="${name}" value="${v}" ${v === cur ? "checked" : ""}><span>${l}</span></label>`).join("")}</div>`;
+const swatches = cur => `<div class="swatches">${COLORS.map((c, i) => `<label><input type="radio" name="color" value="${c}" ${c === cur || (!cur && i === 0) ? "checked" : ""} aria-label="Cor ${i + 1}"><span style="background:${c}"></span></label>`).join("")}</div>`;
+
+/* ----- lançamento ----- */
+let D = null, DEDIT = null;
+function newDraft(over = {}){
+  const accs = L("accounts"), cards = L("cards"), today = todayISO();
+  const d = {kind: "despesa", cardKind: "cartao_despesa", description: "", amount: "", accountId: S.selAccount && get("accounts", S.selAccount) ? S.selAccount : accs[0]?.id || "",
+    toAccountId: "", cardId: S.selCard && get("cards", S.selCard) ? S.selCard : cards[0]?.id || "", categoryId: "", date: today, status: "efetivada", invoice: "", invoiceManual: false, installments: "1", repeat: "1", notes: "", ...over};
+  if (d.cardId && !d.invoice) d.invoice = invoiceFor(get("cards", d.cardId), d.date);
+  return d;
+}
+function draftFrom(t){
+  const d = {...t, amount: centsToInput(t.amount), invoiceManual: true};
+  if (t.kind.startsWith("cartao")) { d.kind = "cartao"; d.cardKind = t.kind; }
+  return d;
+}
+function txBody(d, editing){
+  const accs = L("accounts"), cards = L("cards");
+  const catType = d.kind === "receita" ? "receita" : "despesa";
+  const cats = L("categories").filter(c => c.type === catType).sort((a, b) => a.name.localeCompare(b.name));
+  const catField = field("Categoria", `<select name="categoryId" id="tx-cat">${opts(cats, d.categoryId, "Sem categoria")}</select>`, cats.length ? "" : `Nenhuma categoria de ${catType}. <button type="button" class="linkbtn" data-act="default-cats">Criar categorias padrão</button>`);
+  const repeatOpts = Array.from({length: 24}, (_, i) => `<option value="${i + 1}" ${String(i + 1) === String(d.repeat) ? "selected" : ""}>${i === 0 ? "Não repetir" : `${i + 1} meses`}</option>`).join("");
+  let h = "";
+  if (!editing) h += radios("kind", [["despesa", "Despesa"], ["receita", "Receita"], ["transferencia", "Transferência"], ["cartao", "Cartão"]], d.kind);
+  else h += `<input type="hidden" name="kind" value="${d.kind}">`;
+  if (d.kind === "cartao") {
+    if (!editing) h += radios("cardKind", [["cartao_despesa", "Compra"], ["cartao_estorno", "Estorno"]], d.cardKind);
+    else h += `<input type="hidden" name="cardKind" value="${d.cardKind}">`;
+  }
+  h += field("Descrição", `<input name="description" id="tx-desc" value="${esc(d.description)}" maxlength="120" required placeholder="${d.kind === "receita" ? "Ex.: Salário" : d.kind === "cartao" ? "Ex.: Supermercado" : "Ex.: Conta de luz"}">`);
+  h += `<div class="frow">${field("Valor (R$)", `<input name="amount" id="tx-amount" inputmode="decimal" value="${esc(d.amount)}" placeholder="0,00" required class="num">`, d.kind === "cartao" && d.cardKind === "cartao_despesa" && !editing && +d.installments > 1 ? "Valor total da compra; será dividido nas parcelas." : "")}`;
+  if (d.kind === "cartao") {
+    h += field(d.cardKind === "cartao_estorno" ? "Data do estorno" : "Data da compra", `<input type="date" name="date" id="tx-date" value="${esc(d.date)}" required>`) + `</div>`;
+    if (!cards.length) h += `<p class="banner">Cadastre um cartão primeiro. <button type="button" class="linkbtn" data-act="new-card">Cadastrar cartão</button></p>`;
+    const card = get("cards", d.cardId);
+    let invField = "";
+    if (card) {
+      const auto = invoiceFor(card, d.date || todayISO());
+      const keys = Array.from({length: 10}, (_, i) => addMonthsKey(auto, i - 3));
+      if (d.invoice && !keys.includes(d.invoice)) keys.push(d.invoice);
+      const sel = d.invoice || auto;
+      const dts = invoiceDates(card, sel);
+      invField = field("Fatura", `<select name="invoice" id="tx-inv">${keys.sort().map(k => `<option value="${k}" ${k === sel ? "selected" : ""}>${fmonth(k)}${k === auto ? " (automática)" : ""}</option>`).join("")}</select>`, `Fecha em ${fdate(dts.closing)} · <strong>vence em ${fdate(dts.due)}</strong>`);
+    }
+    h += `<div class="frow">${field("Cartão", `<select name="cardId" id="tx-card">${opts(cards, d.cardId)}</select>`)}${invField}</div>`;
+    h += `<div class="frow">${catField}${d.cardKind === "cartao_despesa" && !editing ? field("Parcelas", `<select name="installments" id="tx-inst">${Array.from({length: 24}, (_, i) => `<option value="${i + 1}" ${String(i + 1) === String(d.installments) ? "selected" : ""}>${i === 0 ? "À vista" : `${i + 1}x`}</option>`).join("")}</select>`, +d.installments > 1 ? `${d.installments}x de ${money(Math.floor(parseMoney(d.amount) / +d.installments) || 0)}, uma por fatura` : "") : ""}</div>`;
+  } else if (d.kind === "transferencia") {
+    h += field(d.status === "pendente" ? "Data prevista" : "Data", `<input type="date" name="date" id="tx-date" value="${esc(d.date)}" required>`) + `</div>`;
+    h += `<div class="frow">${field("Sai da conta", `<select name="accountId" id="tx-acc">${opts(accs, d.accountId)}</select>`)}${field("Entra na conta", `<select name="toAccountId" id="tx-to">${opts(accs.filter(a => a.id !== d.accountId), d.toAccountId, "Escolha")}</select>`)}</div>`;
+    h += field("Situação", radios("status", [["efetivada", "Efetivada"], ["pendente", "Pendente"]], d.status));
+  } else {
+    const isPay = d.kind === "pagamento_fatura";
+    h += field(d.status === "pendente" ? (d.kind === "receita" ? "Previsão de recebimento" : "Vencimento") : "Data", `<input type="date" name="date" id="tx-date" value="${esc(d.date)}" required>`) + `</div>`;
+    if (!accs.length) h += `<p class="banner">Cadastre uma conta bancária primeiro. <button type="button" class="linkbtn" data-act="new-account">Cadastrar conta</button></p>`;
+    h += `<div class="frow">${field("Conta", `<select name="accountId" id="tx-acc">${opts(accs, d.accountId)}</select>`)}${isPay ? "" : catField}</div>`;
+    h += field("Situação", radios("status", [["efetivada", d.kind === "receita" ? "Recebida" : "Paga"], ["pendente", d.kind === "receita" ? "A receber" : "A pagar"]], d.status),
+      d.status === "pendente" ? "Pendente não altera o saldo até ser efetivado." : "");
+    if (!editing && !isPay) h += field("Repetir todo mês", `<select name="repeat" id="tx-rep">${repeatOpts}</select>`, +d.repeat > 1 ? "Os meses seguintes entram como pendentes, com o mesmo valor." : "");
+  }
+  h += field("Observação", `<textarea name="notes" id="tx-notes" maxlength="500">${esc(d.notes)}</textarea>`);
+  return h;
+}
+function openTx(draft, editingId){
+  D = draft; DEDIT = editingId || null;
+  const t = editingId ? get("transactions", editingId) : null;
+  const delBtn = t ? `<button type="button" class="btn danger spacer" data-act="del-tx">Excluir</button>` : "";
+  openModal({
+    title: t ? `Editar ${KIND_LABEL[t.kind].toLowerCase()}` : "Novo lançamento",
+    body: txBody(D, !!t), foot: footSave("Salvar", delBtn),
+    onSubmit: fd => commitTx({...D, ...fd}),
+    onChange: e => {
+      const n = e.target.name; if (!n) return;
+      Object.assign(D, formData());
+      if (n === "invoice") D.invoiceManual = true;
+      if ((n === "cardId" || n === "date") && D.kind === "cartao" && !D.invoiceManual) { const c = get("cards", D.cardId); if (c && D.date) D.invoice = invoiceFor(c, D.date); }
+      if (n === "kind" && D.kind === "cartao" && !D.invoice) { const c = get("cards", D.cardId); if (c) D.invoice = invoiceFor(c, D.date); }
+      if (n === "kind") D.categoryId = "";
+      if (["kind", "cardKind", "cardId", "date", "status", "installments", "repeat", "accountId", "invoice"].includes(n)) {
+        $("#dlg-body").innerHTML = txBody(D, !!DEDIT);
+        const el = form.querySelector(`[name="${n}"]${e.target.type === "radio" ? ":checked" : ""}`); if (el) el.focus();
+      }
+    }
+  });
+}
+function commitTx(d){
+  const amount = parseMoney(d.amount);
+  if (!String(d.description || "").trim()) return "Informe uma descrição.";
+  if (!(amount > 0)) return "Informe um valor maior que zero, por exemplo 125,90.";
+  if (!d.date) return "Informe a data.";
+  const base = {description: d.description.trim(), amount, date: d.date, notes: String(d.notes || "").trim(), categoryId: d.categoryId || "", updatedAt: Date.now()};
+  if (d.kind === "despesa" || d.kind === "receita" || d.kind === "pagamento_fatura") {
+    if (!get("accounts", d.accountId)) return "Escolha a conta bancária.";
+    Object.assign(base, {kind: d.kind, accountId: d.accountId, status: d.status === "pendente" ? "pendente" : "efetivada"});
+    if (d.kind === "pagamento_fatura") Object.assign(base, {cardId: d.cardId, invoice: d.invoice, categoryId: ""});
+  } else if (d.kind === "transferencia") {
+    if (!get("accounts", d.accountId) || !get("accounts", d.toAccountId)) return "Escolha a conta de origem e a de destino.";
+    if (d.accountId === d.toAccountId) return "A conta de destino precisa ser diferente da origem.";
+    Object.assign(base, {kind: "transferencia", accountId: d.accountId, toAccountId: d.toAccountId, status: d.status === "pendente" ? "pendente" : "efetivada", categoryId: ""});
+  } else if (d.kind === "cartao") {
+    const card = get("cards", d.cardId); if (!card) return "Escolha o cartão.";
+    Object.assign(base, {kind: d.cardKind === "cartao_estorno" ? "cartao_estorno" : "cartao_despesa", cardId: card.id, invoice: d.invoice || invoiceFor(card, d.date), status: "efetivada"});
+  } else return "Escolha o tipo de lançamento.";
+
+  if (DEDIT) { const old = get("transactions", DEDIT); Store.put("transactions", {...old, ...base, id: DEDIT}); toast("Lançamento salvo."); return; }
+  const n = base.kind === "cartao_despesa" ? Math.max(1, +d.installments || 1) : (base.kind === "despesa" || base.kind === "receita") ? Math.max(1, +d.repeat || 1) : 1;
+  const groupId = n > 1 ? newId() : "";
+  const now = Date.now(); const list = [];
+  for (let i = 0; i < n; i++) {
+    const t = {...base, id: newId() + i, createdAt: now + i, groupId};
+    if (n > 1) {
+      t.description = `${base.description} (${i + 1}/${n})`;
+      t.date = addMonthsDate(base.date, i);
+      if (base.kind === "cartao_despesa") {
+        const part = Math.floor(amount / n);
+        t.amount = i === 0 ? amount - part * (n - 1) : part;
+        t.invoice = addMonthsKey(base.invoice, i);
+      } else if (i > 0) t.status = "pendente";
+    }
+    list.push({col: "transactions", obj: t});
+  }
+  Store.putMany(list);
+  toast(n > 1 ? `${n} lançamentos criados.` : "Lançamento criado.");
+}
+
+/* ----- efetivar ----- */
+function openSettle(t){
+  const accs = L("accounts");
+  openModal({
+    title: t.kind === "receita" ? "Confirmar recebimento" : t.kind === "transferencia" ? "Efetivar transferência" : "Confirmar pagamento",
+    body: `<p><strong>${esc(t.description)}</strong><br><span class="small muted">Previsto para ${fdate(t.date)} · ${money(t.amount)}</span></p>
+      <div class="frow">${field("Data efetiva", `<input type="date" name="date" id="st-date" value="${todayISO()}" required>`)}${field("Valor (R$)", `<input name="amount" id="st-amount" inputmode="decimal" class="num" value="${centsToInput(t.amount)}">`, "Ajuste se houve juros ou desconto.")}</div>
+      ${t.kind === "transferencia" ? "" : field("Conta", `<select name="accountId" id="st-acc">${opts(accs, t.accountId)}</select>`)}`,
+    foot: footSave(t.kind === "receita" ? "Confirmar recebimento" : "Confirmar"),
+    onSubmit: fd => {
+      const amount = parseMoney(fd.amount); if (!(amount > 0)) return "Informe um valor maior que zero.";
+      if (!fd.date) return "Informe a data.";
+      Store.put("transactions", {...t, status: "efetivada", amount, date: fd.date, dueDate: t.dueDate || t.date, accountId: fd.accountId || t.accountId, updatedAt: Date.now()});
+      toast("Lançamento efetivado. O saldo foi atualizado.");
+    }
+  });
+}
+
+/* ----- pagar fatura ----- */
+function openPayInvoice(card, key){
+  const s = invoiceSummary(card, key); const today = todayISO();
+  const def = Math.max(0, s.remaining - s.scheduled);
+  openModal({
+    title: `Pagar fatura ${card.name}`,
+    body: `<p>Fatura de <strong>${fmonthLong(key)}</strong> · vence em ${fdate(s.due)}<br><span class="small muted">Total ${money(s.total)} · pago ${money(s.paid)}${s.scheduled ? ` · agendado ${money(s.scheduled)}` : ""}</span></p>
+      <div class="frow">${field("Valor (R$)", `<input name="amount" id="pi-amount" inputmode="decimal" class="num" value="${centsToInput(def)}">`, "Pode ser parcial.")}${field("Data", `<input type="date" name="date" id="pi-date" value="${s.due > today ? s.due : today}">`)}</div>
+      ${field("Debitar da conta", `<select name="accountId" id="pi-acc">${opts(L("accounts"), card.payAccountId || L("accounts")[0]?.id)}</select>`)}
+      ${field("Situação", radios("status", [["efetivada", "Paga agora"], ["pendente", "Agendar (a pagar)"]], s.due > today ? "pendente" : "efetivada"), "Agendado entra em contas a pagar e só sai do saldo quando efetivado.")}`,
+    foot: footSave("Registrar pagamento"),
+    onSubmit: fd => {
+      const amount = parseMoney(fd.amount); if (!(amount > 0)) return "Informe um valor maior que zero.";
+      if (!get("accounts", fd.accountId)) return "Cadastre ou escolha uma conta bancária.";
+      Store.put("transactions", {id: newId(), kind: "pagamento_fatura", description: `Fatura ${card.name} ${fmonth(key)}`, amount, date: fd.date || today, accountId: fd.accountId, cardId: card.id, invoice: key, status: fd.status === "pendente" ? "pendente" : "efetivada", categoryId: "", notes: "", createdAt: Date.now()});
+      toast(fd.status === "pendente" ? "Pagamento agendado." : "Pagamento registrado.");
+    }
+  });
+}
+
+/* ----- conta / cartão / categoria ----- */
+function openAccount(a){
+  openModal({
+    title: a ? "Editar conta" : "Nova conta bancária",
+    body: `${field("Nome", `<input name="name" id="ac-name" value="${esc(a?.name)}" required maxlength="60" placeholder="Ex.: Conta corrente">`)}
+      <div class="frow">${field("Banco", `<input name="bank" id="ac-bank" value="${esc(a?.bank)}" maxlength="60" placeholder="Ex.: Banco do Brasil">`)}${field("Tipo", `<select name="type" id="ac-type">${["Conta corrente", "Poupança", "Investimento", "Carteira", "Outra"].map(t => `<option ${a?.type === t ? "selected" : ""}>${t}</option>`).join("")}</select>`)}</div>
+      ${field("Saldo inicial (R$)", `<input name="initial" id="ac-initial" inputmode="decimal" class="num" value="${a ? centsToInput(a.initial) : ""}" placeholder="0,00">`, "Saldo da conta antes do primeiro lançamento. Use sinal de menos se estiver negativo.")}
+      ${field("Cor", swatches(a?.color))}`,
+    foot: footSave("Salvar", a ? `<button type="button" class="btn danger spacer" data-act="del-account" data-id="${a.id}">Excluir</button>` : ""),
+    onSubmit: fd => {
+      if (!fd.name.trim()) return "Informe o nome da conta.";
+      const initial = parseMoney(fd.initial); if (Number.isNaN(initial)) return "Saldo inicial inválido.";
+      const obj = {...(a || {id: newId(), createdAt: Date.now()}), name: fd.name.trim(), bank: fd.bank.trim(), type: fd.type, initial, color: fd.color};
+      Store.put("accounts", obj); S.selAccount = obj.id; toast("Conta salva.");
+    }
+  });
+}
+function openCard(c){
+  const days = cur => Array.from({length: 31}, (_, i) => `<option ${+cur === i + 1 ? "selected" : ""}>${i + 1}</option>`).join("");
+  openModal({
+    title: c ? "Editar cartão" : "Novo cartão de crédito",
+    body: `${field("Nome", `<input name="name" id="cc-name" value="${esc(c?.name)}" required maxlength="60" placeholder="Ex.: Visa Platinum">`)}
+      ${field("Limite (R$)", `<input name="limit" id="cc-limit" inputmode="decimal" class="num" value="${c ? centsToInput(c.limit) : ""}" placeholder="0,00">`)}
+      <div class="frow">${field("Dia do fechamento", `<select name="closingDay" id="cc-close">${days(c?.closingDay ?? 3)}</select>`, "Compras a partir deste dia vão para a fatura seguinte.")}${field("Dia do vencimento", `<select name="dueDay" id="cc-due">${days(c?.dueDay ?? 10)}</select>`)}</div>
+      ${field("Conta para pagar a fatura", `<select name="payAccountId" id="cc-acc">${opts(L("accounts"), c?.payAccountId, "Escolher na hora")}</select>`)}
+      ${field("Cor", swatches(c?.color))}`,
+    foot: footSave("Salvar", c ? `<button type="button" class="btn danger spacer" data-act="del-card" data-id="${c.id}">Excluir</button>` : ""),
+    onSubmit: fd => {
+      if (!fd.name.trim()) return "Informe o nome do cartão.";
+      const limit = parseMoney(fd.limit); if (Number.isNaN(limit)) return "Limite inválido.";
+      const obj = {...(c || {id: newId(), createdAt: Date.now()}), name: fd.name.trim(), limit, closingDay: +fd.closingDay, dueDay: +fd.dueDay, payAccountId: fd.payAccountId, color: fd.color};
+      Store.put("cards", obj); S.selCard = obj.id; toast("Cartão salvo.");
+    }
+  });
+}
+function openCat(c){
+  openModal({
+    title: c ? "Editar categoria" : "Nova categoria",
+    body: `${field("Nome", `<input name="name" id="ct-name" value="${esc(c?.name)}" required maxlength="40">`)}
+      ${field("Tipo", radios("type", [["despesa", "Despesa"], ["receita", "Receita"]], c?.type || "despesa"))}
+      ${field("Cor", swatches(c?.color))}`,
+    foot: footSave("Salvar", c ? `<button type="button" class="btn danger spacer" data-act="del-cat" data-id="${c.id}">Excluir</button>` : ""),
+    onSubmit: fd => {
+      if (!fd.name.trim()) return "Informe o nome da categoria.";
+      Store.put("categories", {...(c || {id: newId()}), name: fd.name.trim(), type: fd.type === "receita" ? "receita" : "despesa", color: fd.color});
+      toast("Categoria salva.");
+    }
+  });
+}
+
+/* ---------- dados padrão / exemplo ---------- */
+const DEFAULT_CATS = [
+  ["Moradia", "despesa", 0], ["Mercado", "despesa", 6], ["Alimentação fora", "despesa", 4], ["Transporte", "despesa", 1], ["Saúde", "despesa", 3],
+  ["Educação", "despesa", 2], ["Lazer", "despesa", 5], ["Assinaturas", "despesa", 2], ["Compras", "despesa", 3], ["Contas de consumo", "despesa", 1],
+  ["Impostos e taxas", "despesa", 7], ["Outras despesas", "despesa", 7],
+  ["Salário", "receita", 0], ["Freelance", "receita", 1], ["Rendimentos", "receita", 6], ["Reembolsos", "receita", 2], ["Outras receitas", "receita", 7]
+];
+function defaultCats(){
+  const have = new Set(L("categories").map(c => `${c.type}:${c.name.toLowerCase()}`));
+  const list = DEFAULT_CATS.filter(([n, t]) => !have.has(`${t}:${n.toLowerCase()}`)).map(([name, type, ci]) => ({col: "categories", obj: {id: newId() + Math.random().toString(36).slice(2, 5), name, type, color: COLORS[ci]}}));
+  if (!list.length) return toast("As categorias padrão já existem.");
+  Store.putMany(list); toast(`${list.length} categorias criadas.`);
+}
+function loadSample(){
+  if (!L("categories").length) defaultCats();
+  const catId = name => L("categories").find(c => c.name === name)?.id || "";
+  const t0 = todayISO(), m = t0.slice(0,7), now = Date.now();
+  const cc = {id: newId() + "a", name: "Conta corrente (exemplo)", bank: "Banco Exemplo", type: "Conta corrente", initial: 350000, color: COLORS[1], createdAt: now};
+  const pp = {id: newId() + "b", name: "Poupança (exemplo)", bank: "Banco Exemplo", type: "Poupança", initial: 800000, color: COLORS[6], createdAt: now};
+  const card = {id: newId() + "c", name: "Cartão (exemplo)", limit: 800000, closingDay: 3, dueDay: 10, payAccountId: cc.id, color: COLORS[2], createdAt: now};
+  let k = 0;
+  const T = o => ({col: "transactions", obj: {id: newId() + "s" + (k++), createdAt: now + k, notes: "", categoryId: "", groupId: "", ...o}});
+  const prevInv = invoiceFor(card, addMonthsDate(t0, -1));
+  const list = [
+    {col: "accounts", obj: cc}, {col: "accounts", obj: pp}, {col: "cards", obj: card},
+    T({kind: "receita", description: "Salário", amount: 720000, date: dateIn(m, 5) <= t0 ? dateIn(m, 5) : addDays(t0, -1), accountId: cc.id, status: "efetivada", categoryId: catId("Salário")}),
+    T({kind: "despesa", description: "Aluguel", amount: 210000, date: addDays(t0, -2), accountId: cc.id, status: "efetivada", categoryId: catId("Moradia")}),
+    T({kind: "transferencia", description: "Reserva do mês", amount: 50000, date: addDays(t0, -1), accountId: cc.id, toAccountId: pp.id, status: "efetivada"}),
+    T({kind: "despesa", description: "Conta de luz", amount: 18540, date: addDays(t0, 5), accountId: cc.id, status: "pendente", categoryId: catId("Contas de consumo")}),
+    T({kind: "despesa", description: "Internet", amount: 11990, date: addDays(t0, 12), accountId: cc.id, status: "pendente", categoryId: catId("Contas de consumo")}),
+    T({kind: "receita", description: "Projeto freelance", amount: 150000, date: addDays(t0, 8), accountId: cc.id, status: "pendente", categoryId: catId("Freelance")}),
+    T({kind: "cartao_despesa", description: "Supermercado", amount: 41237, date: addDays(t0, -6), cardId: card.id, invoice: invoiceFor(card, addDays(t0, -6)), status: "efetivada", categoryId: catId("Mercado")}),
+    T({kind: "cartao_despesa", description: "Restaurante", amount: 12800, date: addDays(t0, -3), cardId: card.id, invoice: invoiceFor(card, addDays(t0, -3)), status: "efetivada", categoryId: catId("Alimentação fora")}),
+    T({kind: "cartao_despesa", description: "Streaming", amount: 5590, date: addDays(t0, -1), cardId: card.id, invoice: invoiceFor(card, addDays(t0, -1)), status: "efetivada", categoryId: catId("Assinaturas")}),
+    T({kind: "cartao_estorno", description: "Estorno: cobrança duplicada do restaurante", amount: 12800, date: t0, cardId: card.id, invoice: invoiceFor(card, t0), status: "efetivada", categoryId: catId("Alimentação fora")}),
+    T({kind: "cartao_despesa", description: "Farmácia", amount: 8930, date: addMonthsDate(t0, -1), cardId: card.id, invoice: prevInv, status: "efetivada", categoryId: catId("Saúde")}),
+    T({kind: "pagamento_fatura", description: `Fatura Cartão (exemplo) ${fmonth(prevInv)}`, amount: 8930, date: invoiceDates(card, prevInv).due <= t0 ? invoiceDates(card, prevInv).due : t0, accountId: cc.id, cardId: card.id, invoice: prevInv, status: "efetivada"})
+  ];
+  const g = newId(), inst = 3, total = 360000;
+  for (let i = 0; i < inst; i++) list.push(T({kind: "cartao_despesa", description: `Notebook (${i + 1}/${inst})`, amount: total / inst, date: addMonthsDate(addDays(t0, -4), i), cardId: card.id, invoice: addMonthsKey(invoiceFor(card, addDays(t0, -4)), i), status: "efetivada", categoryId: catId("Compras"), groupId: g}));
+  Store.putMany(list);
+  toast("Dados de exemplo carregados.");
+}
+
+/* ---------- eventos ---------- */
+let toastT;
+function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200); }
+
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-act]"); if (!el) return;
+  const act = el.dataset.act, id = el.dataset.id;
+  switch (act) {
+    case "close": closeModal(); break;
+    case "nav": location.hash = el.dataset.r; break;
+    case "new-tx": openTx(newDraft()); break;
+    case "new-card-tx": openTx(newDraft({kind: "cartao", cardKind: el.dataset.k, cardId: el.dataset.card, invoice: S.invKey[el.dataset.card] || "", invoiceManual: !!S.invKey[el.dataset.card]})); break;
+    case "edit-tx": { const t = get("transactions", id); if (t) openTx(draftFrom(t), id); break; }
+    case "settle": { e.stopPropagation(); const t = get("transactions", id); if (t) openSettle(t); break; }
+    case "del-tx": {
+      const t = get("transactions", DEDIT); if (!t) break;
+      const grp = t.groupId ? L("transactions").filter(x => x.groupId === t.groupId) : [];
+      confirmFoot("Excluir este lançamento?", "del-tx-yes", "Excluir", grp.length > 1 ? `<button type="button" class="btn danger" data-act="del-grp-yes">Excluir as ${grp.length} do grupo</button>` : "");
+      break;
+    }
+    case "del-tx-yes": Store.remove("transactions", DEDIT); closeModal(); toast("Lançamento excluído."); break;
+    case "del-grp-yes": { const t = get("transactions", DEDIT); if (t) Store.removeMany(L("transactions").filter(x => x.groupId === t.groupId).map(x => ({col: "transactions", id: x.id}))); closeModal(); toast("Lançamentos excluídos."); break; }
+    case "cancel-confirm": break; // tratado no listener de captura abaixo
+    case "new-account": closeModal(); openAccount(null); break;
+    case "edit-account": openAccount(get("accounts", id)); break;
+    case "sel-account": S.selAccount = id; render(); break;
+    case "del-account": {
+      const n = L("transactions").filter(t => t.accountId === id || t.toAccountId === id).length;
+      $("#dlg-foot").dataset.id = id;
+      if (n) confirmFoot(`Esta conta tem ${n} lançamento${n > 1 ? "s" : ""}. Exclua ou mova esses lançamentos antes.`, "cancel-confirm", "Entendi");
+      else confirmFoot("Excluir esta conta?", "del-account-yes");
+      $("#dlg-foot").dataset.id = id; break;
+    }
+    case "del-account-yes": Store.remove("accounts", $("#dlg-foot").dataset.id); closeModal(); toast("Conta excluída."); break;
+    case "new-card": closeModal(); openCard(null); break;
+    case "edit-card": openCard(get("cards", id)); break;
+    case "sel-card": S.selCard = id; render(); break;
+    case "del-card": {
+      const n = L("transactions").filter(t => t.cardId === id).length;
+      if (n) confirmFoot(`Este cartão tem ${n} lançamento${n > 1 ? "s" : ""}. Exclua esses lançamentos antes.`, "cancel-confirm", "Entendi");
+      else confirmFoot("Excluir este cartão?", "del-card-yes");
+      $("#dlg-foot").dataset.id = id; break;
+    }
+    case "del-card-yes": Store.remove("cards", $("#dlg-foot").dataset.id); closeModal(); toast("Cartão excluído."); break;
+    case "new-cat": openCat(null); break;
+    case "edit-cat": openCat(get("categories", id)); break;
+    case "del-cat": {
+      const n = L("transactions").filter(t => t.categoryId === id).length;
+      if (n) confirmFoot(`Esta categoria está em ${n} lançamento${n > 1 ? "s" : ""}. Troque a categoria deles antes de excluir.`, "cancel-confirm", "Entendi");
+      else confirmFoot("Excluir esta categoria?", "del-cat-yes");
+      $("#dlg-foot").dataset.id = id; break;
+    }
+    case "del-cat-yes": Store.remove("categories", $("#dlg-foot").dataset.id); closeModal(); toast("Categoria excluída."); break;
+    case "default-cats": {
+      defaultCats();
+      if (dlg.open && D && $("#tx-desc")) { Object.assign(D, formData()); setTimeout(() => { $("#dlg-body").innerHTML = txBody(D, !!DEDIT); }, 0); }
+      break;
+    }
+    case "sample": loadSample(); break;
+    case "month": S.month = addMonthsKey(S.month, +el.dataset.d); render(); break;
+    case "acct-month": S.acctMonth = addMonthsKey(S.acctMonth, +el.dataset.d); render(); break;
+    case "inv-nav": { const c = get("cards", S.selCard); if (c) { S.invKey[c.id] = addMonthsKey(S.invKey[c.id] || invoiceFor(c, todayISO()), +el.dataset.d); render(); } break; }
+    case "open-invoice": S.selCard = el.dataset.card; S.invKey[el.dataset.card] = el.dataset.key; location.hash = "cartoes"; if (S.route === "cartoes") render(); break;
+    case "pay-invoice": { e.stopPropagation(); const c = get("cards", el.dataset.card); if (c) openPayInvoice(c, el.dataset.key); break; }
+    case "export": {
+      const json = JSON.stringify({app: "livro-caixa", version: 1, exportedAt: new Date().toISOString(), ...Object.fromEntries(COLS.map(c => [c, L(c)]))}, null, 1);
+      const box = $("#export-box"); box.value = json; box.hidden = false;
+      const fallback = () => { box.focus(); box.select(); toast("Selecione o texto e copie para guardar o backup."); };
+      try { navigator.clipboard.writeText(json).then(() => toast("Backup copiado. Cole em um arquivo de texto para guardar."), fallback); } catch { fallback(); }
+      break;
+    }
+    case "wipe":
+      openModal({title: "Apagar todos os dados", body: `<p>Isto apaga ${L("accounts").length} contas, ${L("cards").length} cartões, ${L("categories").length} categorias e ${L("transactions").length} lançamentos. Não dá para desfazer.</p><p class="small muted">Se quiser guardar uma cópia, use “Copiar backup” antes.</p>`,
+        foot: `<button type="button" class="btn" data-act="close">Cancelar</button><button type="button" class="btn danger solid" data-act="wipe-yes">Apagar tudo</button>`});
+      break;
+    case "wipe-yes": Store.removeMany(COLS.flatMap(c => L(c).map(x => ({col: c, id: x.id})))); closeModal(); toast("Todos os dados foram apagados."); break;
+  }
+});
+// "Voltar" da confirmação: restaura o rodapé original de cada formulário
+document.addEventListener("click", e => {
+  const el = e.target.closest('[data-act="cancel-confirm"]'); if (!el) return;
+  const id = $("#dlg-foot").dataset.id || "";
+  let del = "del-tx";
+  if ($("#ac-name")) del = "del-account"; else if ($("#cc-name")) del = "del-card"; else if ($("#ct-name")) del = "del-cat";
+  $("#dlg-foot").innerHTML = footSave("Salvar", `<button type="button" class="btn danger spacer" data-act="${del}" data-id="${esc(id)}">Excluir</button>`);
+}, true);
+document.addEventListener("keydown", e => {
+  if ((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); }
+});
+document.addEventListener("input", e => {
+  if (e.target.id === "f-q") { S.f.q = e.target.value; const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); }
+});
+document.addEventListener("change", e => {
+  const map = {"f-kind": "kind", "f-status": "status", "f-cat": "cat", "f-src": "src"};
+  if (map[e.target.id]) { S.f[map[e.target.id]] = e.target.value; const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); }
+  if (e.target.id === "import-file") {
+    const file = e.target.files && e.target.files[0]; if (!file) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        const o = JSON.parse(r.result);
+        if (o.app !== "livro-caixa") throw new Error();
+        const list = COLS.flatMap(c => (Array.isArray(o[c]) ? o[c] : []).filter(x => x && typeof x.id === "string" && /^[A-Za-z0-9_\-.~:@+]{1,80}$/.test(x.id)).map(obj => ({col: c, obj})));
+        Store.putMany(list); toast(`${list.length} itens importados.`);
+      } catch { toast("Este arquivo não é um backup do Livro-Caixa."); }
+      e.target.value = "";
+    };
+    r.readAsText(file);
+  }
+});
+window.addEventListener("hashchange", route);
+S.route = VIEWS[location.hash.replace("#", "")] ? location.hash.replace("#", "") : "painel";
+boot();
+})();
+</script>

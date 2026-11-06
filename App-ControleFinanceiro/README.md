@@ -1,0 +1,22 @@
+# Livro-Caixa: controle financeiro pessoal
+
+Aplicativo web de uma página só (HTML + JavaScript, sem dependências) para controlar as finanças pessoais.
+
+## Funcionalidades
+
+- **Contas bancárias**: cadastro com saldo inicial, saldo atual e previsto, e extrato mensal com saldo após cada lançamento.
+- **Cartões de crédito**: limite, dia de fechamento e de vencimento. Cada compra entra automaticamente na fatura certa, e você pode trocar a fatura manualmente. Também aceita compras parceladas (uma parcela por fatura), estornos e pagamento total ou parcial da fatura, à vista ou agendado.
+- **Categorias** de despesa e de receita, com uma lista padrão para começar.
+- **Lançamentos pendentes** (contas a pagar e a receber): não alteram o saldo até serem efetivados. Na efetivação dá para ajustar a data, o valor (juros ou desconto) e a conta.
+- **Repetição mensal** de despesas e receitas (contas fixas).
+- **Painel** com saldo, valores a pagar e a receber, saldo previsto, vencimentos dos próximos 30 dias e despesas do mês por categoria.
+- **Backup** em JSON (copiar e importar).
+
+## Como usar
+
+- **Publicado no claude.ai**: os dados ficam salvos na conta Claude do usuário, em uma área privada que só ele vê.
+- **Localmente**: abra o `index.html` no navegador. Nesse caso, os dados ficam salvos só naquele navegador (localStorage).
+
+## Regra da fatura
+
+A fatura é identificada pelo mês de vencimento. Uma compra feita **no dia do fechamento ou depois dele** vai para a fatura seguinte.
