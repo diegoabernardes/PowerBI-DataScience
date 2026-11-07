@@ -119,22 +119,27 @@ main{min-width:0;padding-block:26px 110px;padding-left:max(16px,env(safe-area-in
 .inv-sum .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:1.05rem;margin-top:2px}
 
 /* balanço mensal */
-.bal-top{display:grid;justify-items:center;gap:10px;text-align:center;padding:22px 18px}
-.bal-top .big{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:clamp(1.9rem,6vw,2.8rem);font-weight:500;line-height:1.1;overflow-wrap:anywhere}
-.bal-eq{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 14px;font-size:.92rem;color:var(--muted)}
-.bal-eq b{font-family:var(--f-mono);font-weight:500}
-.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.9rem;color:var(--muted)}
+.bal{display:grid;gap:22px;max-width:760px;width:100%;margin:0 auto}
+.bal-month{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.bal-month strong{font-family:var(--f-display);font-weight:500;font-size:1.35rem;text-align:center}
+.bal-month .icon-btn{border:0;background:transparent;font-size:1.6rem;color:var(--muted)}
+.bal-head{display:grid;justify-items:center;gap:4px;text-align:center}
+.bal-head .lbl{color:var(--muted)}
+.bal-head .big{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:clamp(2rem,8vw,2.8rem);font-weight:500;line-height:1.15}
+.bal-tot{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.bal-tot > div{display:grid;gap:2px;min-width:0}
+.bal-tot .lbl{color:var(--muted)}
+.bal-tot .v{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-size:clamp(1.05rem,4.5vw,1.4rem);font-weight:500;overflow-wrap:anywhere}
+.bal-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
+.bal-list{display:grid;gap:18px}
+.bal-it{display:grid;grid-template-columns:40px minmax(0,1fr);gap:10px;align-items:center;cursor:pointer;border-radius:10px}
+.bal-it:hover .nm{color:var(--ink)}
+.bal-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:1rem;background:var(--muted)}
+.bal-it .nm{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere;line-height:1.25}
+.bal-it .vl{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;overflow-wrap:anywhere}
+.bal-opt{display:flex;justify-content:center}
+.toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.88rem;color:var(--muted)}
 .toggle input{width:auto;accent-color:var(--accent)}
-.bal-cat{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;padding:10px 4px;border-top:1px solid var(--line);cursor:pointer}
-.bal-cat:first-child{border-top:0}
-.bal-cat:hover{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
-.bal-cat .nm{display:flex;align-items:center;gap:7px;font-weight:500;min-width:0;overflow-wrap:anywhere}
-.bal-cat .vl{font-family:var(--f-mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
-.bal-cat .bar{grid-column:1 / -1;margin-top:2px}
-.bal-cat .bar > i.in{background:var(--pos)}
-.bal-cat .bar > i.out{background:var(--neg)}
-.bal-cat .ds{grid-column:1 / -1;font-size:.78rem;color:var(--muted)}
-.bal-foot{display:flex;justify-content:space-between;gap:12px;padding:10px 4px 0;border-top:2px solid var(--line);margin-top:4px;font-weight:600}
 /* categorias gráfico */
 .cbars{display:grid;gap:10px}
 .cbar{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.9rem}
@@ -695,29 +700,21 @@ function monthBalance(m, incPend){
 }
 function vBalanco(){
   const m = S.balMonth, b = monthBalance(m, S.balPend), saldo = b.totInc - b.totExp;
-  const col = (title, list, tot, pend, dir) => {
-    const max = list.length ? Math.max(...list.map(x => x[1].total)) : 1;
-    return `<section class="panel"><div class="panel-h"><h2>${title}</h2><span class="num ${dir === "in" ? "pos" : "neg"}">${money(tot)}</span></div>
-      <div>${list.length ? list.map(([id, e]) => { const c = get("categories", id); const nm = c ? c.name : "Sem categoria";
-        return `<div class="bal-cat" data-act="bal-cat" data-id="${esc(id)}" tabindex="0" role="button" title="Ver lançamentos de ${esc(nm)}">
-          <span class="nm"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(nm)}</span>
-          <span class="vl">${money(e.total)}</span>
-          <span class="bar"><i class="${dir}" style="width:${Math.max(0, e.total / max * 100).toFixed(1)}%"></i></span>
-          <span class="ds">${tot > 0 ? Math.round(e.total / tot * 100) : 0}% · ${e.n} lançamento${e.n === 1 ? "" : "s"}${e.pend ? ` · ${money(e.pend)} pendente` : ""}</span>
-        </div>`; }).join("") : `<p class="empty">Nenhuma ${dir === "in" ? "receita" : "despesa"} ${S.balPend ? "" : "efetivada "}neste mês.</p>`}</div>
-      ${list.length ? `<div class="bal-foot"><span>Total${pend ? ` <span class="small muted" style="font-weight:400">(${money(pend)} pendente)</span>` : ""}</span><span class="num">${money(tot)}</span></div>` : ""}
-    </section>`;
-  };
-  return head("Balanço mensal", "Receitas e despesas do mês por categoria") + `
-  <section class="panel bal-top">
-    ${monthNav(m, "bal-month")}
-    <div class="eyebrow">Saldo do mês</div>
-    <div class="big ${saldo < 0 ? "neg" : saldo > 0 ? "pos" : ""}">${saldo < 0 ? "−" : ""}${money(Math.abs(saldo))}</div>
-    <div class="bal-eq"><span>Receitas <b class="pos">${money(b.totInc)}</b></span><span>−</span><span>Despesas <b class="neg">${money(b.totExp)}</b></span></div>
-    <label class="toggle"><input type="checkbox" id="bal-pend" ${S.balPend ? "checked" : ""}> Incluir lançamentos pendentes</label>
-    <p class="small muted">${S.balPend ? (b.pendInc || b.pendExp ? `Inclui ${money(b.pendInc)} a receber e ${money(b.pendExp)} a pagar ainda não efetivados.` : "Não há pendentes neste mês.") : "Mostrando só o que já foi efetivado."} Compras no cartão contam na data da compra, já descontados os estornos. Transferências e pagamentos de fatura não entram, para não contar duas vezes.</p>
-  </section>
-  <div class="grid2">${col("Receitas", b.inc, b.totInc, b.pendInc, "in")}${col("Despesas", b.exp, b.totExp, b.pendExp, "out")}</div>`;
+  const mName = MES[+m.slice(5,7)-1]; const title = mName[0].toUpperCase() + mName.slice(1) + (m.slice(0,4) !== todayISO().slice(0,4) ? ` ${m.slice(0,4)}` : "");
+  const item = ([id, e], cls) => { const c = get("categories", id); const nm = c ? c.name : "Sem categoria";
+    return `<div class="bal-it" data-act="bal-cat" data-id="${esc(id)}" tabindex="0" role="button" title="Ver lançamentos de ${esc(nm)}${e.pend ? ` (${money(e.pend)} pendente)` : ""}">
+      <span class="bal-ic" style="background:${esc(c ? c.color : "")}" aria-hidden="true">${esc(nm.trim()[0] || "?").toUpperCase()}</span>
+      <span><span class="nm">${esc(nm)}</span><br><span class="vl ${cls}">${money(e.total)}</span></span></div>`; };
+  return `<div class="bal">
+    <div class="bal-month"><button class="icon-btn" data-act="bal-month" data-d="-1" aria-label="Mês anterior">‹</button><strong>${title}</strong><button class="icon-btn" data-act="bal-month" data-d="1" aria-label="Próximo mês">›</button></div>
+    <div class="bal-head"><span class="lbl">Balanço</span><span class="big ${saldo < 0 ? "neg" : "pos"}">${saldo < 0 ? "−" : ""}${money(Math.abs(saldo))}</span></div>
+    <div class="bal-tot"><div><span class="lbl">Receitas</span><span class="v pos">${money(b.totInc)}</span></div><div><span class="lbl">Despesas</span><span class="v neg">${money(b.totExp)}</span></div></div>
+    <div class="bal-cols">
+      <div class="bal-list">${b.inc.length ? b.inc.map(x => item(x, "pos")).join("") : `<p class="muted small">Sem receitas</p>`}</div>
+      <div class="bal-list">${b.exp.length ? b.exp.map(x => item(x, "neg")).join("") : `<p class="muted small">Sem despesas</p>`}</div>
+    </div>
+    <div class="bal-opt"><label class="toggle"><input type="checkbox" id="bal-pend" ${S.balPend ? "checked" : ""}> Incluir pendentes</label></div>
+  </div>`;
 }
 
 function vCategorias(){
