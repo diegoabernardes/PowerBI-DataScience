@@ -137,7 +137,7 @@ main{min-width:0;padding-block:26px 110px;padding-left:max(16px,env(safe-area-in
 .bal-ic{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:600;font-size:1rem;background:var(--muted)}
 .bal-it .nm{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere;line-height:1.25}
 .bal-it .vl{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;overflow-wrap:anywhere}
-.bal-opt{display:flex;justify-content:center}
+.bal-opt{display:flex;justify-content:center;margin-top:-10px}
 .toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.88rem;color:var(--muted)}
 .toggle input{width:auto;accent-color:var(--accent)}
 /* categorias gráfico */
@@ -707,13 +707,13 @@ function vBalanco(){
       <span><span class="nm">${esc(nm)}</span><br><span class="vl ${cls}">${money(e.total)}</span></span></div>`; };
   return `<div class="bal">
     <div class="bal-month"><button class="icon-btn" data-act="bal-month" data-d="-1" aria-label="Mês anterior">‹</button><strong>${title}</strong><button class="icon-btn" data-act="bal-month" data-d="1" aria-label="Próximo mês">›</button></div>
+    <div class="bal-opt"><label class="toggle"><input type="checkbox" id="bal-pend" ${S.balPend ? "checked" : ""}> Incluir pendentes</label></div>
     <div class="bal-head"><span class="lbl">Balanço</span><span class="big ${saldo < 0 ? "neg" : "pos"}">${saldo < 0 ? "−" : ""}${money(Math.abs(saldo))}</span></div>
     <div class="bal-tot"><div><span class="lbl">Receitas</span><span class="v pos">${money(b.totInc)}</span></div><div><span class="lbl">Despesas</span><span class="v neg">${money(b.totExp)}</span></div></div>
     <div class="bal-cols">
       <div class="bal-list">${b.inc.length ? b.inc.map(x => item(x, "pos")).join("") : `<p class="muted small">Sem receitas</p>`}</div>
       <div class="bal-list">${b.exp.length ? b.exp.map(x => item(x, "neg")).join("") : `<p class="muted small">Sem despesas</p>`}</div>
     </div>
-    <div class="bal-opt"><label class="toggle"><input type="checkbox" id="bal-pend" ${S.balPend ? "checked" : ""}> Incluir pendentes</label></div>
   </div>`;
 }
 
