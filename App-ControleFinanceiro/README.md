@@ -11,6 +11,7 @@ Aplicativo web de uma página só (HTML + JavaScript, sem dependências) para co
 - **Balanço mensal**: receitas e despesas do mês por categoria, em duas colunas, com o saldo do mês no topo, setas para trocar de mês e opção de incluir ou não os pendentes.
 - **Repetição mensal** de despesas e receitas (contas fixas).
 - **Painel** com saldo, valores a pagar e a receber, saldo previsto, vencimentos dos próximos 30 dias e despesas do mês por categoria.
+- **Importar do Excel**: duas importações (transações em contas e compras no cartão, com cartão e mês de vencimento da fatura). Cada uma tem um modelo .xlsx para baixar, com uma linha de exemplo e uma aba de instruções, além de prévia antes de gravar, aviso de duplicados e opção de desfazer a importação.
 - **Backup** em JSON (copiar e importar).
 
 ## Como usar

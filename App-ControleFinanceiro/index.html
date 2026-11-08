@@ -237,6 +237,7 @@ dialog form{display:flex;flex-direction:column;max-height:calc(100vh - 34px)}
 </dialog>
 <div class="toast" id="toast" hidden></div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
 (() => {
 "use strict";
@@ -451,10 +452,11 @@ const ICON = {
   categorias:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
   ajustes:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
   balanco:'<path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0zM8 21h8"/>',
+  importar:'<path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/>',
   mais:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'
 };
 const svg = k => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
-const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["balanco","Balanço mensal"],["categorias","Categorias"],["ajustes","Ajustes"]];
+const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["balanco","Balanço mensal"],["importar","Importar do Excel"],["categorias","Categorias"],["ajustes","Ajustes"]];
 const BOTTOM = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançam."],["agenda","Agenda"],["mais","Mais"]];
 const COLORS = ["#0d5c4c","#2f6fb0","#7b4bb3","#b0397a","#c2542d","#a87b00","#4f7d2a","#5b6b65"];
 
@@ -652,7 +654,7 @@ function lancList(){
 function vLancamentos(){
   const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? "selected" : ""}>${esc(l)}</option>`;
   const f = S.f;
-  return head("Lançamentos", "Todas as movimentações do mês, de contas e cartões") + `
+  return head("Lançamentos", "Todas as movimentações do mês, de contas e cartões", `<a class="btn" href="#importar">Importar do Excel</a>${btnNew}`) + `
   <section class="panel">
     <div class="panel-h">${monthNav(S.month, "month")}</div>
     <div class="filters" style="margin-bottom:10px">
@@ -748,16 +750,17 @@ function vAjustes(){
 function vMais(){
   return head("Mais", "", "") + `<section class="panel"><div class="list-simple">
     <div><a class="linkbtn" href="#balanco">Balanço mensal</a><span class="muted small">Receitas e despesas por categoria</span></div>
+    <div><a class="linkbtn" href="#importar">Importar do Excel</a><span class="muted small">Transações e compras no cartão</span></div>
     <div><a class="linkbtn" href="#categorias">Categorias</a><span class="muted small">${L("categories").length}</span></div>
     <div><a class="linkbtn" href="#ajustes">Ajustes, backup e dados</a></div>
   </div></section>`;
 }
 
 /* ---------- render ---------- */
-const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, balanco: vBalanco, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
+const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, balanco: vBalanco, importar: vImportar, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
 function render(){
   $("#nav-side").innerHTML = ROUTES.map(([r, l]) => `<a href="#${r}" ${S.route === r ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
-  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["balanco", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
+  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["balanco", "importar", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
   $("#store-note").textContent = S.mode === "cloud" ? "Dados salvos na sua conta, visíveis só para você." : S.mode === "local" ? "Dados salvos só neste navegador." : "Carregando…";
   const v = $("#view");
   if (!S.loaded) { v.innerHTML = head("Livro-Caixa", "Carregando seus dados…", "") + `<section class="panel"><p class="muted">Buscando contas, cartões e lançamentos.</p></section>`; return; }
@@ -1058,6 +1061,227 @@ function loadSample(){
   toast("Dados de exemplo carregados.");
 }
 
+/* ---------- importação via Excel ---------- */
+const norm = s => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+const IMP = {
+  contas: {file: "modelo-transacoes-contas.xlsx", sheet: "Transações", title: "Transações em contas",
+    cols: [["Data", "Sim", "Data do lançamento (ou vencimento, se pendente). Ex.: 15/11/2026"],
+      ["Descrição", "Sim", "Texto livre. Ex.: Conta de luz"],
+      ["Valor", "Sim", "Número positivo. Ex.: 185,40"],
+      ["Tipo", "Sim", "Despesa, Receita ou Transferência"],
+      ["Categoria", "Não", "Nome da categoria. Se não existir, é criada automaticamente"],
+      ["Conta", "Sim", "Nome da conta bancária igual ao cadastrado no app (na transferência, a conta de saída)"],
+      ["Conta destino", "Só transferência", "Conta que recebe o valor da transferência"],
+      ["Situação", "Não", "Efetivada ou Pendente. Em branco = Efetivada. Pendente não altera o saldo"],
+      ["Observação", "Não", "Texto livre"]]},
+  cartao: {file: "modelo-compras-cartao.xlsx", sheet: "Cartão", title: "Compras no cartão",
+    cols: [["Data da compra", "Sim", "Ex.: 05/11/2026"],
+      ["Descrição", "Sim", "Ex.: Supermercado. Para parcelas, uma linha por parcela: Notebook (1/3)"],
+      ["Valor", "Sim", "Número positivo. Ex.: 412,37"],
+      ["Tipo", "Não", "Compra ou Estorno. Em branco = Compra"],
+      ["Categoria", "Não", "Nome da categoria. Se não existir, é criada automaticamente"],
+      ["Cartão", "Sim", "Nome do cartão igual ao cadastrado no app"],
+      ["Vencimento da fatura", "Não", "Mês e ano em que a fatura vence. Ex.: 12/2026. Em branco = calculado pela data da compra"],
+      ["Observação", "Não", "Texto livre"]]}
+};
+const EX_TAG = "(EXEMPLO - apague esta linha)";
+function impTemplate(kind){
+  const X = window.XLSX, T = IMP[kind], today = todayISO();
+  const d = new Date(+today.slice(0,4), +today.slice(5,7) - 1, +today.slice(8,10));
+  const acc = L("accounts")[0]?.name || "Conta corrente", card = L("cards")[0];
+  const cat = n => L("categories").find(c => c.name === n)?.name || n;
+  const row = kind === "contas"
+    ? [d, `Conta de luz ${EX_TAG}`, 185.4, "Despesa", cat("Contas de consumo"), acc, "", "Pendente", "Vence todo mês"]
+    : [d, `Supermercado ${EX_TAG}`, 412.37, "Compra", cat("Mercado"), card?.name || "Visa Platinum", (k => `${k.slice(5,7)}/${k.slice(0,4)}`)(card ? invoiceFor(card, today) : addMonthsKey(today.slice(0,7), 1)), ""];
+  const ws = X.utils.aoa_to_sheet([T.cols.map(c => c[0]), row], {dateNF: "dd/mm/yyyy"});
+  ws["!cols"] = T.cols.map(c => ({wch: Math.max(14, c[0].length + 4)}));
+  ws["!cols"][1] = {wch: 44};
+  ws["C2"].z = "#,##0.00";
+  const lists = [["Seus cadastros no app"], [], ["Contas", "Cartões", "Categorias de despesa", "Categorias de receita"]];
+  const A = L("accounts").map(x => x.name), C = L("cards").map(x => x.name), CD = L("categories").filter(x => x.type === "despesa").map(x => x.name), CR = L("categories").filter(x => x.type === "receita").map(x => x.name);
+  for (let i = 0; i < Math.max(A.length, C.length, CD.length, CR.length); i++) lists.push([A[i] || "", C[i] || "", CD[i] || "", CR[i] || ""]);
+  const info = X.utils.aoa_to_sheet([[`Como preencher: ${T.title}`], [], ["Coluna", "Obrigatória", "Como preencher"], ...T.cols, [],
+    ["A linha 2 da aba de dados é um exemplo e é ignorada na importação. Pode apagá-la ou escrever por cima."],
+    ["Lançamentos iguais aos que já existem no app (mesma data, valor, descrição e conta/cartão) são ignorados para não duplicar."], [], ...lists]);
+  info["!cols"] = [{wch: 24}, {wch: 18}, {wch: 80}, {wch: 24}];
+  const wb = X.utils.book_new();
+  X.utils.book_append_sheet(wb, ws, T.sheet);
+  X.utils.book_append_sheet(wb, info, "Instruções");
+  return wb;
+}
+async function impDownload(kind){
+  if (!window.XLSX) return toast("O leitor de Excel não carregou. Verifique a conexão e recarregue a página.");
+  const wb = impTemplate(kind), filename = IMP[kind].file;
+  const dl = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads") : null;
+  if (dl) {
+    try { await dl.save({filename, data: window.XLSX.write(wb, {bookType: "xlsx", type: "array"})}); }
+    catch (e) { if (e && e.code === "rate_limited") toast("Já há um download aguardando confirmação."); else if (!e || e.code !== "declined") toast("Não foi possível baixar o modelo nesta tela."); }
+    return;
+  }
+  try { window.XLSX.writeFile(wb, filename); } catch { toast("Não foi possível baixar o modelo nesta tela."); }
+}
+function impDate(v){
+  let y, m, d;
+  if (v instanceof Date && !isNaN(v)) { const t = new Date(v.getTime() + 12 * 3600e3); y = t.getFullYear(); m = t.getMonth() + 1; d = t.getDate(); }
+  else if (typeof v === "number" && v > 20000 && v < 80000) { const p = window.XLSX.SSF.parse_date_code(v); y = p.y; m = p.m; d = p.d; }
+  else { const s = String(v ?? "").trim(); let r;
+    if ((r = s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4}|\d{2})(?!\d)/))) { d = +r[1]; m = +r[2]; y = +r[3] < 100 ? 2000 + +r[3] : +r[3]; }
+    else if ((r = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) { y = +r[1]; m = +r[2]; d = +r[3]; }
+    else return null; }
+  if (!(m >= 1 && m <= 12 && d >= 1 && d <= lastDay(y, m))) return null;
+  return `${y}-${pad(m)}-${pad(d)}`;
+}
+function impMonth(v){
+  if (v instanceof Date || (typeof v === "number" && v > 20000)) { const iso = impDate(v); return iso ? iso.slice(0,7) : null; }
+  const s = norm(v); if (!s) return "";
+  let r;
+  if ((r = s.match(/^(\d{1,2})[\/.\-](\d{4})$/))) return +r[1] >= 1 && +r[1] <= 12 ? `${r[2]}-${pad(+r[1])}` : null;
+  if ((r = s.match(/^(\d{4})[\/.\-](\d{1,2})$/))) return +r[2] >= 1 && +r[2] <= 12 ? `${r[1]}-${pad(+r[2])}` : null;
+  if ((r = s.match(/^([a-z]{3})[a-z]*[\s\/.\-]*(?:de\s+)?(\d{2}|\d{4})$/))) { const i = MES.findIndex(x => norm(x).startsWith(r[1])); if (i < 0) return null; const y = +r[2] < 100 ? 2000 + +r[2] : +r[2]; return `${y}-${pad(i + 1)}`; }
+  const iso = impDate(v); return iso ? iso.slice(0,7) : null;
+}
+function impAmount(v){
+  if (typeof v === "number") return Math.round(v * 100);
+  const s = String(v ?? "").trim(); if (!s) return NaN;
+  const neg = /^\(.*\)$/.test(s);
+  const c = parseMoney(s.replace(/[()]/g, "")); return neg ? -Math.abs(c) : c;
+}
+function impHeaderKey(h){
+  const s = norm(h);
+  if (!s) return null;
+  if (s.includes("destino")) return "destino";
+  if (s.includes("fatura") || s.startsWith("venc")) return "fatura";
+  if (s.startsWith("data")) return "data";
+  if (s.startsWith("descri") || s.startsWith("historico")) return "descricao";
+  if (s.startsWith("valor")) return "valor";
+  if (s.startsWith("tipo")) return "tipo";
+  if (s.startsWith("categ")) return "categoria";
+  if (s.startsWith("cartao")) return "cartao";
+  if (s.startsWith("conta")) return "conta";
+  if (s.startsWith("situa") || s.startsWith("status")) return "situacao";
+  if (s.startsWith("obs") || s.startsWith("nota")) return "obs";
+  return null;
+}
+function impRows(buf){
+  const X = window.XLSX;
+  const wb = X.read(buf, {type: "array", cellDates: true});
+  for (const name of wb.SheetNames) {
+    const rows = X.utils.sheet_to_json(wb.Sheets[name], {header: 1, raw: true, defval: ""});
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+      const keys = rows[i].map(impHeaderKey);
+      if (keys.includes("data") && keys.includes("descricao") && keys.includes("valor")) {
+        return rows.slice(i + 1).map((r, j) => { const o = {_line: i + j + 2}; keys.forEach((k, c) => { if (k && o[k] === undefined) o[k] = r[c]; }); return o; });
+      }
+    }
+  }
+  return null;
+}
+function impPlan(kind, rows){
+  const byName = col => { const m = new Map(); L(col).forEach(x => m.set(norm(x.name), x)); return m; };
+  const accs = byName("accounts"), cards = byName("cards");
+  const cats = new Map(); L("categories").forEach(c => cats.set(`${c.type}:${norm(c.name)}`, c));
+  const newCats = new Map();
+  const catFor = (name, type) => {
+    const n = String(name ?? "").trim(); if (!n) return "";
+    const k = `${type}:${norm(n)}`;
+    if (cats.has(k)) return cats.get(k).id;
+    if (!newCats.has(k)) newCats.set(k, {id: newId() + "c" + newCats.size, name: n, type, color: COLORS[newCats.size % COLORS.length]});
+    return newCats.get(k).id;
+  };
+  const dupKey = t => `${t.kind}|${t.date}|${t.amount}|${norm(t.description)}|${t.cardId || t.accountId}`;
+  const existing = new Set(L("transactions").map(dupKey));
+  const ok = [], errors = [], missing = new Set(); let dups = 0, examples = 0;
+  const importId = "imp" + Date.now().toString(36); const now = Date.now();
+  for (const r of rows) {
+    const desc = String(r.descricao ?? "").trim();
+    const blank = !desc && String(r.valor ?? "").trim() === "" && String(r.data ?? "").trim() === "";
+    if (blank) continue;
+    if (norm(desc).includes("(exemplo")) { examples++; continue; }
+    const err = msg => errors.push(`Linha ${r._line}: ${msg}`);
+    const date = impDate(r.data); if (!date) { err(`data inválida (“${esc(String(r.data))}”). Use dd/mm/aaaa.`); continue; }
+    if (!desc) { err("descrição em branco."); continue; }
+    const raw = impAmount(r.valor); if (!Number.isFinite(raw) || raw === 0) { err(`valor inválido (“${esc(String(r.valor))}”).`); continue; }
+    const amount = Math.abs(raw), tipo = norm(r.tipo);
+    const t = {id: newId() + "i" + ok.length, description: desc, amount, date, notes: String(r.obs ?? "").trim(), categoryId: "", groupId: "", importId, createdAt: now + ok.length};
+    if (kind === "contas") {
+      let k = tipo.startsWith("transf") ? "transferencia" : /^(desp|saida|debito|pagamento)/.test(tipo) ? "despesa" : /^(rec|entrada|credito)/.test(tipo) ? "receita" : !tipo ? (raw < 0 ? "despesa" : "receita") : null;
+      if (!k) { err(`tipo “${esc(String(r.tipo))}” não reconhecido. Use Despesa, Receita ou Transferência.`); continue; }
+      const a = accs.get(norm(r.conta)); if (!a) { const n = String(r.conta ?? "").trim(); if (n) missing.add(`Conta “${n}”`); err(n ? `conta “${esc(n)}” não está cadastrada.` : "conta em branco."); continue; }
+      const sit = norm(r.situacao);
+      Object.assign(t, {kind: k, accountId: a.id, status: /^(pend|a pagar|a receber|abert|agend|previst)/.test(sit) ? "pendente" : "efetivada"});
+      if (k === "transferencia") {
+        const b = accs.get(norm(r.destino)); if (!b) { const n = String(r.destino ?? "").trim(); if (n) missing.add(`Conta “${n}”`); err(n ? `conta destino “${esc(n)}” não está cadastrada.` : "transferência sem conta destino."); continue; }
+        if (b.id === a.id) { err("conta destino igual à conta de saída."); continue; }
+        t.toAccountId = b.id;
+      } else t.categoryId = catFor(r.categoria, k === "receita" ? "receita" : "despesa");
+    } else {
+      const c = cards.get(norm(r.cartao)); if (!c) { const n = String(r.cartao ?? "").trim(); if (n) missing.add(`Cartão “${n}”`); err(n ? `cartão “${esc(n)}” não está cadastrado.` : "cartão em branco."); continue; }
+      const k = /^(estorno|credito|devol|reembolso|cancel)/.test(tipo) || (!tipo && raw < 0) ? "cartao_estorno" : "cartao_despesa";
+      const inv = impMonth(r.fatura); if (inv === null) { err(`vencimento da fatura inválido (“${esc(String(r.fatura))}”). Use mm/aaaa, ex.: 12/2026.`); continue; }
+      Object.assign(t, {kind: k, cardId: c.id, invoice: inv || invoiceFor(c, date), status: "efetivada", categoryId: catFor(r.categoria, "despesa")});
+    }
+    if (existing.has(dupKey(t))) { dups++; continue; }
+    ok.push(t);
+  }
+  const used = new Set(ok.map(t => t.categoryId));
+  return {kind, ok, errors, missing: [...missing], dups, examples, importId, newCats: [...newCats.values()].filter(c => used.has(c.id))};
+}
+function impPreview(plan, fileName){
+  const P = plan, tot = sum(P.ok, t => txSign(t) * t.amount);
+  const nPend = P.ok.filter(t => t.status === "pendente").length;
+  const sample = P.ok.slice(0, 5).map(t => `<div class="rowline" style="border-top-style:solid"><span>${fdate(t.date)} · ${esc(t.description)}<br><span class="small muted">${esc(KIND_LABEL[t.kind])} · ${esc(srcLabel(t))}${t.status === "pendente" ? " · pendente" : ""}</span></span><span class="num ${txSign(t) < 0 ? "neg" : txSign(t) > 0 ? "pos" : ""}">${money(t.amount)}</span></div>`).join("");
+  openModal({
+    title: `Importar ${IMP[P.kind].title.toLowerCase()}`,
+    body: `<p class="small muted">Arquivo: ${esc(fileName)}</p>
+      <div class="kpis" style="grid-template-columns:repeat(2,minmax(0,1fr))"><div class="kpi"><div class="eyebrow">Prontos</div><div class="v">${P.ok.length}</div><div class="h">${nPend ? `${nPend} ${nPend === 1 ? "pendente" : "pendentes"}` : "lançamentos"}</div></div><div class="kpi"><div class="eyebrow">Resultado</div><div class="v ${tot < 0 ? "neg" : "pos"}">${money(tot)}</div><div class="h">receitas − despesas</div></div></div>
+      ${sample ? `<div><p class="eyebrow" style="margin-bottom:4px">Primeiros lançamentos</p>${sample}${P.ok.length > 5 ? `<p class="small muted" style="padding:6px 4px">e mais ${P.ok.length - 5}…</p>` : ""}</div>` : ""}
+      ${P.newCats.length ? `<p class="small">Categorias novas que serão criadas: <strong>${P.newCats.map(c => esc(c.name)).join(", ")}</strong></p>` : ""}
+      ${P.dups ? `<p class="small muted">${P.dups} ${P.dups === 1 ? "linha igual a um lançamento que já existe foi ignorada" : "linhas iguais a lançamentos que já existem foram ignoradas"}.</p>` : ""}
+      ${P.examples ? `<p class="small muted">A linha de exemplo do modelo foi ignorada.</p>` : ""}
+      ${P.missing.length ? `<p class="banner">Cadastre antes no app, com o mesmo nome da planilha: ${P.missing.map(esc).join(", ")}.</p>` : ""}
+      ${P.errors.length ? `<div><p class="eyebrow neg" style="margin-bottom:4px">${P.errors.length} ${P.errors.length === 1 ? "linha não será importada" : "linhas não serão importadas"}</p><ul class="small" style="margin:0;padding-left:18px;display:grid;gap:2px">${P.errors.slice(0, 12).map(e => `<li>${e}</li>`).join("")}</ul>${P.errors.length > 12 ? `<p class="small muted">e mais ${P.errors.length - 12}.</p>` : ""}</div>` : ""}
+      ${!P.ok.length ? `<p class="banner">Nenhum lançamento pronto para importar. Corrija a planilha e tente de novo.</p>` : ""}`,
+    foot: P.ok.length ? footSave(`Importar ${P.ok.length} lançamento${P.ok.length === 1 ? "" : "s"}`) : `<button type="button" class="btn" data-act="close">Fechar</button>`,
+    onSubmit: () => {
+      if (!P.ok.length) return;
+      Store.putMany([...P.newCats.map(obj => ({col: "categories", obj})), ...P.ok.map(obj => ({col: "transactions", obj}))]);
+      toast(`${P.ok.length} lançamentos importados.`);
+    }
+  });
+}
+function impFile(kind, input){
+  const file = input.files && input.files[0]; if (!file) return;
+  input.value = "";
+  if (!window.XLSX) return toast("O leitor de Excel não carregou. Verifique a conexão e recarregue a página.");
+  const r = new FileReader();
+  r.onload = () => {
+    let rows;
+    try { rows = impRows(new Uint8Array(r.result)); } catch { return toast("Não consegui ler este arquivo. Salve como .xlsx e tente de novo."); }
+    if (!rows) return toast("Não encontrei as colunas Data, Descrição e Valor. Use o modelo para preencher.");
+    impPreview(impPlan(kind, rows), file.name);
+  };
+  r.readAsArrayBuffer(file);
+}
+function impBatches(){
+  const m = new Map();
+  for (const t of L("transactions")) if (t.importId) { const b = m.get(t.importId) || {id: t.importId, n: 0, card: false}; b.n++; if (t.cardId && t.kind !== "pagamento_fatura") b.card = true; m.set(t.importId, b); }
+  return [...m.values()].sort((a, b) => (a.id < b.id ? 1 : -1));
+}
+function vImportar(){
+  const card = (kind, desc) => { const T = IMP[kind]; return `<section class="panel" style="display:grid;gap:12px;align-content:start">
+    <h2>${T.title}</h2><p class="muted">${desc}</p>
+    <div class="list-simple">${T.cols.map(c => `<div><span>${esc(c[0])}</span><span class="small ${c[1] === "Sim" ? "" : "muted"}">${c[1] === "Sim" ? "obrigatória" : c[1] === "Não" ? "opcional" : esc(c[1].toLowerCase())}</span></div>`).join("")}</div>
+    <div class="hact"><button class="btn" data-act="imp-template" data-k="${kind}">Baixar modelo (.xlsx)</button><label class="btn primary" for="imp-${kind}">Escolher planilha</label><input type="file" id="imp-${kind}" data-imp="${kind}" accept=".xlsx,.xls,.csv" hidden></div>
+  </section>`; };
+  const bs = impBatches().slice(0, 6);
+  return head("Importar do Excel", "Traga lançamentos de outras planilhas ou aplicativos", "") + `
+  <p class="small muted">Baixe o modelo, preencha a partir da linha 3 (a linha 2 é um exemplo e é ignorada) e escolha o arquivo. Antes de gravar, o app mostra uma prévia com o que será importado e as linhas com problema. Contas e cartões precisam estar cadastrados com o mesmo nome usado na planilha; categorias que não existirem são criadas.</p>
+  <div class="grid2">${card("contas", "Despesas, receitas e transferências das contas bancárias, efetivadas ou pendentes.")}${card("cartao", "Compras e estornos do cartão de crédito, com o cartão usado e o mês de vencimento da fatura.")}</div>
+  <section class="panel"><h2>Importações feitas</h2>
+    <div class="list-simple">${bs.length ? bs.map(b => { const ts = parseInt(b.id.slice(3), 36); const d = new Date(ts); return `<div><span>${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())} · ${b.card ? "Cartão" : "Contas"}<br><span class="small muted">${b.n} lançamento${b.n === 1 ? "" : "s"}</span></span><button class="btn sm danger" data-act="imp-undo" data-id="${b.id}">Desfazer</button></div>`; }).join("") : `<p class="empty">Nenhuma importação ainda.</p>`}</div>
+  </section>`;
+}
+
 /* ---------- eventos ---------- */
 let toastT;
 function toast(msg){ const t = $("#toast"); t.textContent = msg; t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 3200); }
@@ -1118,6 +1342,14 @@ document.addEventListener("click", e => {
     }
     case "sample": loadSample(); break;
     case "month": S.month = addMonthsKey(S.month, +el.dataset.d); render(); break;
+    case "imp-template": impDownload(el.dataset.k); break;
+    case "imp-undo": {
+      const b = impBatches().find(x => x.id === id); if (!b) break;
+      openModal({title: "Desfazer importação", body: `<p>Isto exclui os ${b.n} lançamentos dessa importação. As categorias criadas por ela continuam.</p>`,
+        foot: `<button type="button" class="btn" data-act="close">Cancelar</button><button type="button" class="btn danger solid" data-act="imp-undo-yes" data-id="${b.id}">Excluir ${b.n} lançamentos</button>`});
+      break;
+    }
+    case "imp-undo-yes": Store.removeMany(L("transactions").filter(t => t.importId === id).map(t => ({col: "transactions", id: t.id}))); closeModal(); toast("Importação desfeita."); break;
     case "bal-month": S.balMonth = addMonthsKey(S.balMonth, +el.dataset.d); render(); break;
     case "bal-cat": S.month = S.balMonth; S.f = {kind: "", status: S.balPend ? "" : "efetivada", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "acct-month": S.acctMonth = addMonthsKey(S.acctMonth, +el.dataset.d); render(); break;
@@ -1154,6 +1386,7 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => {
   const map = {"f-kind": "kind", "f-status": "status", "f-cat": "cat", "f-src": "src"};
+  if (e.target.dataset && e.target.dataset.imp) { impFile(e.target.dataset.imp, e.target); return; }
   if (e.target.id === "bal-pend") { S.balPend = e.target.checked; try { localStorage.setItem("livro-caixa-balpend", S.balPend ? "1" : "0"); } catch {} render(); return; }
   if (map[e.target.id]) { S.f[map[e.target.id]] = e.target.value; const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); }
   if (e.target.id === "import-file") {
