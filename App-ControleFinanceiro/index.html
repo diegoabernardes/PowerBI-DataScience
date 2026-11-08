@@ -169,6 +169,45 @@ main{min-width:0;padding-block:26px 110px;padding-left:max(16px,env(safe-area-in
 .inv-items .row:first-child{border-top:0}
 .inv-foot{padding:6px 4px 10px}
 @media (max-width:760px){ .view-seg{min-width:0;width:100%} .inv-items{margin-left:10px} }
+/* relatórios */
+.rep-tabs{max-width:420px;width:100%;margin:0 auto}
+.chart-wrap{position:relative}
+.chart{width:100%;min-height:230px}
+.chart svg{display:block;max-width:100%;overflow:visible}
+.chart .grid{stroke:var(--line);stroke-width:1}
+.chart .ax0{stroke:var(--muted);stroke-width:1}
+.chart .tick{fill:var(--muted);font:11px var(--f-body)}
+.chart .b-in{fill:var(--pos)} .chart .b-out{fill:var(--neg)}
+.chart .fut{opacity:.5}
+.chart .hl{fill:var(--surface-2);opacity:0}
+.chart .hl.on{opacity:.7}
+.chart .l-res{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+.chart .d-res{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.chart .a-bal{fill:var(--accent);opacity:.12}
+.chart .l-bal{fill:none;stroke:var(--accent);stroke-width:2;stroke-linejoin:round}
+.chart .l-bal.fut{stroke-dasharray:5 4;opacity:1}
+.chart .d-bal{fill:var(--accent);stroke:var(--surface);stroke-width:2}
+.chart .d-bal.neg{fill:var(--neg)}
+.chart .d-bal.now{stroke:var(--ink)}
+.chart .hit{fill:transparent;cursor:pointer;outline:none}
+.tip{position:absolute;z-index:5;display:grid;gap:3px;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:.82rem;box-shadow:0 4px 14px rgba(0,0,0,.14);pointer-events:none;min-width:190px}
+.tip[hidden]{display:none}
+.tip span{display:flex;align-items:center;gap:6px;justify-content:space-between}
+.tip span b{font-family:var(--f-mono);font-weight:500;margin-left:auto}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:.82rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.sw{display:inline-block;width:10px;height:10px;border-radius:2px;flex:none}
+.sw.in{background:var(--pos)} .sw.out{background:var(--neg)} .sw.res{background:var(--accent);border-radius:50%}
+.sw.res.line{width:16px;height:3px;border-radius:2px}
+.tbl-wrap{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:.9rem;min-width:520px}
+.tbl th,.tbl td{padding:8px 10px;text-align:right;border-top:1px solid var(--line);font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.tbl th{font-family:var(--f-body);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);border-top:0}
+.tbl th:first-child,.tbl td:first-child{text-align:left;font-family:var(--f-body)}
+.tbl tr.fut td{opacity:.65}
+.tbl tfoot td{font-weight:600;border-top:2px solid var(--line)}
+.cbar .track i.in{background:var(--pos)} .cbar .track i.out{background:var(--neg)}
+.rep-cbar[role="button"]{cursor:pointer}
 /* categorias gráfico */
 .cbars{display:grid;gap:10px}
 .cbar{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.9rem}
@@ -241,6 +280,10 @@ dialog form{display:flex;flex-direction:column;max-height:calc(100vh - 34px)}
   .row .r-bal{grid-column:3;font-size:.78rem}
   .frow{grid-template-columns:1fr}
   .cbar{grid-template-columns:minmax(0,110px) minmax(0,1fr) auto}
+  .kpi{padding:14px}
+  .rep-cbar{grid-template-columns:minmax(0,1fr) auto;row-gap:4px}
+  .rep-cbar .track{grid-column:1 / -1;grid-row:2}
+  .kpi .v{font-size:1.02rem}
   .mnav strong{min-width:120px}
 }
 @media (prefers-reduced-motion:no-preference){ .btn,.tile,.row{transition:background .12s,border-color .12s} }
@@ -307,6 +350,7 @@ const S = {
   selAccount: null, selCard: null, invKey: {},
   f: {kind:"", status:"", cat:"", src:"", q:""},
   invOpen: new Set(), lancView: (() => { try { return localStorage.getItem("livro-caixa-lancview") || "detalhado"; } catch { return "detalhado"; } })(),
+  repTab: "fluxo", repYear: todayISO().slice(0,4), repPend: true, repCatType: "despesa", repPeriod: "", repData: null,
   balMonth: todayISO().slice(0,7), planMonth: todayISO().slice(0,7), balPend: (() => { try { return localStorage.getItem("livro-caixa-balpend") !== "0"; } catch { return true; } })()
 };
 const L = col => [...S.data[col].values()];
@@ -484,10 +528,11 @@ const ICON = {
   planejamento:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   balanco:'<path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0zM8 21h8"/>',
   importar:'<path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/>',
+  relatorios:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
   mais:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'
 };
 const svg = k => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
-const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["planejamento","Planejamento"],["balanco","Balanço mensal"],["importar","Importar do Excel"],["categorias","Categorias"],["ajustes","Ajustes"]];
+const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["planejamento","Planejamento"],["balanco","Balanço mensal"],["relatorios","Relatórios"],["importar","Importar do Excel"],["categorias","Categorias"],["ajustes","Ajustes"]];
 const BOTTOM = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançam."],["agenda","Agenda"],["mais","Mais"]];
 const COLORS = ["#0d5c4c","#2f6fb0","#7b4bb3","#b0397a","#c2542d","#a87b00","#4f7d2a","#5b6b65"];
 
@@ -927,6 +972,179 @@ function planWidget(){
   </section>`;
 }
 
+/* ---------- relatórios ---------- */
+function cashFlow(year, incPend){
+  const accs = L("accounts"), txs = L("transactions"), init = sum(accs, a => a.initial || 0);
+  const open = [];
+  if (incPend) for (const card of L("cards")) for (const k of cardKeys(card)) { const s = invoiceSummary(card, k); const o = s.remaining - s.scheduled; if (o > 0) open.push({date: s.due, amount: o}); }
+  const months = Array.from({length: 12}, (_, i) => ({key: `${year}-${pad(i + 1)}`, rec: 0, desp: 0, res: 0, saldo: 0}));
+  for (const t of txs) {
+    if (!t.date || !t.date.startsWith(year)) continue;
+    if (t.status === "pendente" && !incPend) continue;
+    const mo = months[+t.date.slice(5,7) - 1];
+    if (t.kind === "receita") mo.rec += t.amount;
+    else if (t.kind === "despesa" || t.kind === "pagamento_fatura") mo.desp += t.amount;
+  }
+  for (const o of open) if (o.date.startsWith(year)) months[+o.date.slice(5,7) - 1].desp += o.amount;
+  for (const mo of months) {
+    const next = `${addMonthsKey(mo.key, 1)}-01`;
+    let b = init;
+    for (const t of txs) if (t.date && t.date < next) for (const a of accs) b += txEffect(t, a.id, incPend);
+    if (incPend) b -= sum(open.filter(o => o.date < next), o => o.amount);
+    mo.res = mo.rec - mo.desp; mo.saldo = b;
+  }
+  const start = (() => { let b = init; const first = `${year}-01-01`; for (const t of txs) if (t.date && t.date < first) for (const a of accs) b += txEffect(t, a.id, incPend); if (incPend) b -= sum(open.filter(o => o.date < first), o => o.amount); return b; })();
+  return {months, start, rec: sum(months, m => m.rec), desp: sum(months, m => m.desp)};
+}
+function fmtCompact(c){
+  const v = c / 100, a = Math.abs(v), s = v < 0 ? "−" : "";
+  const n = (x, d) => x.toLocaleString("pt-BR", {maximumFractionDigits: d});
+  if (a >= 1e6) return `${s}R$ ${n(a / 1e6, 1)} mi`;
+  if (a >= 1e3) return `${s}R$ ${n(a / 1e3, a >= 1e4 ? 0 : 1)} mil`;
+  return `${s}R$ ${n(a, 0)}`;
+}
+function niceStep(range){
+  const raw = Math.max(range, 100) / 4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw / p;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+}
+const svgEl = (tag, attrs, inner = "") => `<${tag} ${Object.entries(attrs).map(([k, v]) => `${k}="${v}"`).join(" ")}>${inner}</${tag}>`;
+function barPath(x, yBase, yEnd, w, r){ // barra com cantos arredondados só na ponta do dado
+  const h = Math.abs(yEnd - yBase); if (h < 0.5) return "";
+  r = Math.min(r, h, w / 2);
+  if (yEnd < yBase) return `M${x},${yBase}V${yEnd + r}Q${x},${yEnd} ${x + r},${yEnd}H${x + w - r}Q${x + w},${yEnd} ${x + w},${yEnd + r}V${yBase}Z`;
+  return `M${x},${yBase}V${yEnd - r}Q${x},${yEnd} ${x + r},${yEnd}H${x + w - r}Q${x + w},${yEnd} ${x + w},${yEnd - r}V${yBase}Z`;
+}
+function chartFrame(el, lo, hi){
+  const W = Math.max(280, el.clientWidth), H = W < 520 ? 230 : 280;
+  const m = {l: W < 520 ? 52 : 68, r: 10, t: 12, b: 26}, pw = W - m.l - m.r, ph = H - m.t - m.b;
+  const step = niceStep(hi - lo);
+  const yMax = Math.ceil(hi / step) * step || step, yMin = Math.floor(lo / step) * step;
+  const y = v => m.t + (yMax - v) / (yMax - yMin) * ph;
+  let grid = "";
+  for (let v = yMin; v <= yMax + 1; v += step) grid += svgEl("line", {x1: m.l, x2: W - m.r, y1: y(v).toFixed(1), y2: y(v).toFixed(1), class: v === 0 ? "ax0" : "grid"}) + svgEl("text", {x: m.l - 6, y: (y(v) + 4).toFixed(1), "text-anchor": "end", class: "tick"}, fmtCompact(v));
+  const bw = pw / 12, cx = i => m.l + bw * i + bw / 2;
+  const labels = Array.from({length: 12}, (_, i) => (W >= 520 || i % 2 === 0) ? svgEl("text", {x: cx(i).toFixed(1), y: H - 8, "text-anchor": "middle", class: "tick"}, MES[i].slice(0,3)) : "").join("");
+  return {W, H, m, pw, ph, y, bw, cx, grid, labels};
+}
+function attachTip(el, F, rows){
+  const tip = el.parentElement.querySelector(".tip");
+  el.querySelectorAll(".hit").forEach(h => {
+    const show = () => {
+      const i = +h.dataset.i; tip.innerHTML = rows(i); tip.hidden = false;
+      el.querySelectorAll(".hl").forEach(x => x.classList.toggle("on", +x.dataset.i === i));
+      const x = F.cx(i), tw = tip.offsetWidth, box = el.clientWidth;
+      tip.style.left = `${Math.min(box - tw, Math.max(0, x - tw / 2))}px`; tip.style.top = `0px`;
+    };
+    h.addEventListener("pointerenter", show); h.addEventListener("click", show); h.addEventListener("focus", show);
+  });
+  el.addEventListener("pointerleave", () => { tip.hidden = true; el.querySelectorAll(".hl").forEach(x => x.classList.remove("on")); });
+}
+function drawFlow(el, D){
+  const ms = D.months, cur = todayISO().slice(0,7);
+  const hi = Math.max(0, ...ms.map(m => Math.max(m.rec, m.res))), lo = Math.min(0, ...ms.map(m => Math.min(-m.desp, m.res)));
+  const F = chartFrame(el, lo, hi), w = Math.min(26, F.bw * 0.56), y0 = F.y(0);
+  let bars = "", hits = "";
+  ms.forEach((m, i) => {
+    const x = F.cx(i) - w / 2, fut = m.key > cur ? " fut" : "";
+    bars += svgEl("rect", {x: (F.cx(i) - F.bw / 2 + 1).toFixed(1), y: F.m.t, width: (F.bw - 2).toFixed(1), height: F.ph, class: "hl", "data-i": i});
+    bars += svgEl("path", {d: barPath(x, y0 - 1, Math.min(y0 - 1, F.y(m.rec)), w, 4), class: "b-in" + fut});
+    bars += svgEl("path", {d: barPath(x, y0 + 1, Math.max(y0 + 1, F.y(-m.desp)), w, 4), class: "b-out" + fut});
+    hits += svgEl("rect", {x: (F.cx(i) - F.bw / 2).toFixed(1), y: 0, width: F.bw.toFixed(1), height: F.H, class: "hit", "data-i": i, tabindex: 0, "aria-label": `${MES[i]}: receitas ${money(m.rec)}, despesas ${money(m.desp)}`});
+  });
+  const pts = ms.map((m, i) => `${F.cx(i).toFixed(1)},${F.y(m.res).toFixed(1)}`);
+  const line = svgEl("polyline", {points: pts.join(" "), class: "l-res"}) + ms.map((m, i) => svgEl("circle", {cx: F.cx(i).toFixed(1), cy: F.y(m.res).toFixed(1), r: 4, class: "d-res"})).join("");
+  el.innerHTML = svgEl("svg", {viewBox: `0 0 ${F.W} ${F.H}`, width: F.W, height: F.H, role: "img", "aria-label": "Receitas, despesas e resultado por mês"}, F.grid + bars + line + F.labels + hits);
+  attachTip(el, F, i => { const m = ms[i]; return `<strong>${MES[i][0].toUpperCase() + MES[i].slice(1)}${m.key > cur ? " (previsto)" : ""}</strong><span><i class="sw in"></i>Receitas <b>${money(m.rec)}</b></span><span><i class="sw out"></i>Despesas <b>${money(m.desp)}</b></span><span><i class="sw res"></i>Resultado <b class="${m.res < 0 ? "neg" : "pos"}">${money(m.res)}</b></span><span>Saldo no fim do mês <b>${money(m.saldo)}</b></span>`; });
+}
+function drawSaldo(el, D){
+  const ms = D.months, cur = todayISO().slice(0,7);
+  const vals = ms.map(m => m.saldo);
+  const F = chartFrame(el, Math.min(0, ...vals, D.start), Math.max(0, ...vals, D.start));
+  const pt = i => `${F.cx(i).toFixed(1)},${F.y(vals[i]).toFixed(1)}`;
+  const curIdx = cur.startsWith(D.year) ? +cur.slice(5,7) - 1 : (cur < D.year ? -1 : 11);
+  const past = ms.map((_, i) => i).filter(i => i <= curIdx), fut = ms.map((_, i) => i).filter(i => i >= Math.max(curIdx, 0));
+  const area = `M${F.cx(0).toFixed(1)},${F.y(0).toFixed(1)}L${ms.map((_, i) => pt(i)).join("L")}L${F.cx(11).toFixed(1)},${F.y(0).toFixed(1)}Z`;
+  let g = svgEl("path", {d: area, class: "a-bal"});
+  ms.forEach((_, i) => { g += svgEl("rect", {x: (F.cx(i) - F.bw / 2 + 1).toFixed(1), y: F.m.t, width: (F.bw - 2).toFixed(1), height: F.ph, class: "hl", "data-i": i}); });
+  if (past.length > 1) g += svgEl("polyline", {points: past.map(pt).join(" "), class: "l-bal"});
+  if (fut.length > 1) g += svgEl("polyline", {points: fut.map(pt).join(" "), class: "l-bal fut"});
+  g += ms.map((m, i) => svgEl("circle", {cx: F.cx(i).toFixed(1), cy: F.y(vals[i]).toFixed(1), r: i === curIdx ? 5 : 3.5, class: "d-bal" + (vals[i] < 0 ? " neg" : "") + (i === curIdx ? " now" : "")})).join("");
+  const hits = ms.map((m, i) => svgEl("rect", {x: (F.cx(i) - F.bw / 2).toFixed(1), y: 0, width: F.bw.toFixed(1), height: F.H, class: "hit", "data-i": i, tabindex: 0, "aria-label": `${MES[i]}: saldo ${money(m.saldo)}`})).join("");
+  el.innerHTML = svgEl("svg", {viewBox: `0 0 ${F.W} ${F.H}`, width: F.W, height: F.H, role: "img", "aria-label": "Saldo em contas no fim de cada mês"}, F.grid + g + F.labels + hits);
+  attachTip(el, F, i => `<strong>${MES[i][0].toUpperCase() + MES[i].slice(1)}${ms[i].key > cur ? " (previsto)" : ""}</strong><span>Saldo no fim do mês <b class="${vals[i] < 0 ? "neg" : ""}">${money(vals[i])}</b></span><span>Resultado do mês <b class="${ms[i].res < 0 ? "neg" : "pos"}">${money(ms[i].res)}</b></span>`);
+}
+function catReport(year, period, type){
+  const keys = period ? [`${year}-${period}`] : Array.from({length: 12}, (_, i) => `${year}-${pad(i + 1)}`);
+  const map = new Map();
+  for (const k of keys) { const b = monthBalance(k, S.repPend); for (const [id, e] of (type === "receita" ? b.inc : b.exp)) map.set(id, (map.get(id) || 0) + e.total); }
+  return [...map.entries()].filter(([, v]) => v > 0).sort((a, b) => b[1] - a[1]);
+}
+function vRelatorios(){
+  const y = S.repYear, tab = S.repTab;
+  const tabs = `<div class="seg rep-tabs" role="radiogroup" aria-label="Relatório"><label><input type="radio" name="rep-tab" value="fluxo" ${tab === "fluxo" ? "checked" : ""}><span>Fluxo de caixa</span></label><label><input type="radio" name="rep-tab" value="categorias" ${tab === "categorias" ? "checked" : ""}><span>Por categoria</span></label></div>`;
+  const yearNav = `<div class="bal-month" style="max-width:360px;margin:0 auto;width:100%"><button class="icon-btn" data-act="rep-year" data-d="-1" aria-label="Ano anterior">‹</button><strong>${y}</strong><button class="icon-btn" data-act="rep-year" data-d="1" aria-label="Próximo ano">›</button></div>`;
+  const pendOpt = `<div class="bal-opt"><label class="toggle"><input type="checkbox" id="rep-pend" ${S.repPend ? "checked" : ""}> Incluir pendentes${tab === "fluxo" ? " e faturas em aberto" : ""}</label></div>`;
+  let body = "";
+  if (tab === "fluxo") {
+    const D = cashFlow(y, S.repPend); D.year = y; S.repData = D;
+    const res = D.rec - D.desp, last = D.months[11];
+    body = `<section class="kpis" aria-label="Resumo do ano">
+        <div class="kpi"><div class="eyebrow">Receitas</div><div class="v pos">${money(D.rec)}</div><div class="h">no ano</div></div>
+        <div class="kpi"><div class="eyebrow">Despesas</div><div class="v neg">${money(D.desp)}</div><div class="h">inclui pagamentos de fatura</div></div>
+        <div class="kpi"><div class="eyebrow">Resultado</div><div class="v ${res < 0 ? "neg" : "pos"}">${money(res)}</div><div class="h">receitas − despesas</div></div>
+        <div class="kpi"><div class="eyebrow">Saldo em 31/12</div><div class="v ${last.saldo < 0 ? "neg" : ""}">${money(last.saldo)}</div><div class="h">começou o ano com ${money(D.start)}</div></div>
+      </section>
+      <section class="panel"><div class="panel-h"><h2>Entradas e saídas por mês</h2>
+          <div class="legend"><span><i class="sw in"></i>Receitas</span><span><i class="sw out"></i>Despesas</span><span><i class="sw res line"></i>Resultado</span></div></div>
+        <div class="chart-wrap"><div class="tip" hidden></div><div class="chart" id="ch-flow"></div></div>
+        <p class="small muted">Visão de caixa: o que entrou e saiu das contas. As compras no cartão aparecem no mês em que a fatura é paga${S.repPend ? " (ou vence, se ainda estiver em aberto)" : ""}. Meses futuros aparecem mais claros.</p>
+      </section>
+      <section class="panel"><div class="panel-h"><h2>Saldo em contas</h2><span class="small muted">no fim de cada mês</span></div>
+        <div class="chart-wrap"><div class="tip" hidden></div><div class="chart" id="ch-bal"></div></div>
+        <p class="small muted">A linha tracejada é a previsão a partir de hoje${S.repPend ? ", com pendentes e faturas em aberto" : ", só com o que já foi efetivado"}.</p>
+      </section>
+      <section class="panel"><div class="panel-h"><h2>Tabela do fluxo de caixa</h2><button class="btn sm" data-act="rep-export">Exportar Excel</button></div>
+        <div class="tbl-wrap"><table class="tbl"><thead><tr><th>Mês</th><th>Receitas</th><th>Despesas</th><th>Resultado</th><th>Saldo final</th></tr></thead><tbody>
+          <tr class="muted"><td>Saldo inicial</td><td></td><td></td><td></td><td>${money(D.start)}</td></tr>
+          ${D.months.map((m, i) => `<tr${m.key > todayISO().slice(0,7) ? ' class="fut"' : ""}><td>${MES[i][0].toUpperCase() + MES[i].slice(1)}</td><td class="pos">${money(m.rec)}</td><td class="neg">${money(m.desp)}</td><td class="${m.res < 0 ? "neg" : "pos"}">${money(m.res)}</td><td class="${m.saldo < 0 ? "neg" : ""}">${money(m.saldo)}</td></tr>`).join("")}
+        </tbody><tfoot><tr><td>Total</td><td class="pos">${money(D.rec)}</td><td class="neg">${money(D.desp)}</td><td class="${res < 0 ? "neg" : "pos"}">${money(res)}</td><td>${money(last.saldo)}</td></tr></tfoot></table></div>
+      </section>`;
+  } else {
+    const type = S.repCatType, per = S.repPeriod;
+    const rows = catReport(y, per, type), tot = sum(rows, r => r[1]), max = rows.length ? rows[0][1] : 1;
+    const nMonths = per ? 1 : (y < todayISO().slice(0,4) ? 12 : y > todayISO().slice(0,4) ? 12 : +todayISO().slice(5,7));
+    body = `<section class="panel">
+      <div class="panel-h"><div class="seg" role="radiogroup" aria-label="Tipo" style="min-width:220px"><label><input type="radio" name="rep-cat" value="despesa" ${type === "despesa" ? "checked" : ""}><span>Despesas</span></label><label><input type="radio" name="rep-cat" value="receita" ${type === "receita" ? "checked" : ""}><span>Receitas</span></label></div>
+        <select id="rep-period" aria-label="Período" style="width:auto"><option value="">Ano inteiro</option>${MES.map((n, i) => `<option value="${pad(i + 1)}" ${per === pad(i + 1) ? "selected" : ""}>${n[0].toUpperCase() + n.slice(1)}</option>`).join("")}</select></div>
+      <div class="list-simple" style="margin-bottom:8px"><div><span>Total de ${type === "receita" ? "receitas" : "despesas"}</span><strong class="num ${type === "receita" ? "pos" : "neg"}">${money(tot)}</strong></div>${per ? "" : `<div><span>Média por mês</span><span class="num">${money(Math.round(tot / Math.max(1, nMonths)))}</span></div>`}</div>
+      ${rows.length ? `<div class="cbars">${rows.map(([id, v]) => { const c = get("categories", id); const nm = c ? c.name : "Sem categoria"; return `<div class="cbar rep-cbar" ${per ? `data-act="rep-cat-open" data-id="${esc(id)}" role="button" tabindex="0"` : ""} title="${esc(nm)}: ${money(v)} (${Math.round(v / tot * 100)}%)"><span class="lbl"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(nm)}</span><span class="track"><i class="${type === "receita" ? "in" : "out"}" style="width:${(v / max * 100).toFixed(1)}%"></i></span><span class="num small">${money(v)} <span class="muted">${Math.round(v / tot * 100)}%</span></span></div>`; }).join("")}</div>` : `<p class="empty">Nenhuma ${type === "receita" ? "receita" : "despesa"} no período.</p>`}
+      <p class="small muted" style="margin-top:12px">Compras no cartão contam na data da compra, já descontados os estornos.${per ? " Toque numa categoria para ver os lançamentos." : ""}</p>
+    </section>`;
+  }
+  return head("Relatórios", "Fluxo de caixa e gastos por categoria", "") + tabs + yearNav + pendOpt + body;
+}
+function drawReports(){
+  if (S.route !== "relatorios" || S.repTab !== "fluxo" || !S.repData) return;
+  const f = $("#ch-flow"), b = $("#ch-bal");
+  if (f) drawFlow(f, S.repData);
+  if (b) drawSaldo(b, S.repData);
+}
+async function repExport(){
+  if (!window.XLSX) return toast("O gerador de Excel não carregou. Verifique a conexão e recarregue a página.");
+  const D = S.repData; if (!D) return;
+  const X = window.XLSX, r = c => c / 100;
+  const aoa = [["Mês", "Receitas", "Despesas", "Resultado", "Saldo final"], ["Saldo inicial", "", "", "", r(D.start)],
+    ...D.months.map((m, i) => [MES[i][0].toUpperCase() + MES[i].slice(1), r(m.rec), r(m.desp), r(m.res), r(m.saldo)]),
+    ["Total", r(D.rec), r(D.desp), r(D.rec - D.desp), r(D.months[11].saldo)]];
+  const ws = X.utils.aoa_to_sheet(aoa); ws["!cols"] = [{wch: 14}, {wch: 14}, {wch: 14}, {wch: 14}, {wch: 14}];
+  Object.keys(ws).forEach(k => { if (k[0] !== "!" && k[0] !== "A" && typeof ws[k].v === "number") ws[k].z = "#,##0.00"; });
+  const wb = X.utils.book_new(); X.utils.book_append_sheet(wb, ws, `Fluxo ${D.year}`);
+  const filename = `fluxo-de-caixa-${D.year}.xlsx`;
+  const dl = window.claude && typeof window.claude.use === "function" ? await window.claude.use("downloads") : null;
+  if (dl) { try { await dl.save({filename, data: X.write(wb, {bookType: "xlsx", type: "array"})}); } catch (e) { if (!e || e.code !== "declined") toast("Não foi possível exportar agora."); } return; }
+  try { X.writeFile(wb, filename); } catch { toast("Não foi possível exportar agora."); }
+}
+
 function vCategorias(){
   const cats = L("categories").sort((a, b) => a.name.localeCompare(b.name));
   const used = id => L("transactions").filter(t => t.categoryId === id).length;
@@ -959,6 +1177,7 @@ function vMais(){
   return head("Mais", "", "") + `<section class="panel"><div class="list-simple">
     <div><a class="linkbtn" href="#planejamento">Planejamento</a><span class="muted small">Limite de gasto por categoria</span></div>
     <div><a class="linkbtn" href="#balanco">Balanço mensal</a><span class="muted small">Receitas e despesas por categoria</span></div>
+    <div><a class="linkbtn" href="#relatorios">Relatórios</a><span class="muted small">Fluxo de caixa e categorias</span></div>
     <div><a class="linkbtn" href="#importar">Importar do Excel</a><span class="muted small">Transações e compras no cartão</span></div>
     <div><a class="linkbtn" href="#categorias">Categorias</a><span class="muted small">${L("categories").length}</span></div>
     <div><a class="linkbtn" href="#ajustes">Ajustes, backup e dados</a></div>
@@ -966,15 +1185,16 @@ function vMais(){
 }
 
 /* ---------- render ---------- */
-const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, planejamento: vPlanejamento, balanco: vBalanco, importar: vImportar, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
+const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, planejamento: vPlanejamento, balanco: vBalanco, relatorios: vRelatorios, importar: vImportar, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
 function render(){
   $("#nav-side").innerHTML = ROUTES.map(([r, l]) => `<a href="#${r}" ${S.route === r ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
-  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["planejamento", "balanco", "importar", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
+  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["planejamento", "balanco", "relatorios", "importar", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
   $("#store-note").textContent = S.mode === "cloud" ? "Dados salvos na sua conta, visíveis só para você." : S.mode === "local" ? "Dados salvos só neste navegador." : "Carregando…";
   const v = $("#view");
   if (!S.loaded) { v.innerHTML = head("Livro-Caixa", "Carregando seus dados…", "") + `<section class="panel"><p class="muted">Buscando contas, cartões e lançamentos.</p></section>`; return; }
   const banners = (S.note ? `<p class="banner">${esc(S.note)}</p>` : "") + (S.stale ? `<p class="banner">Não foi possível confirmar seus dados com o servidor. O que aparece pode estar desatualizado.</p>` : "");
   v.innerHTML = banners + (VIEWS[S.route] || vPainel)();
+  drawReports();
 }
 function route(){
   const h = location.hash.replace("#", "");
@@ -1569,6 +1789,9 @@ document.addEventListener("click", e => {
     case "plan-add": openPlanEdit(S.planMonth, {...budgetOf(S.planMonth), [id]: Math.max(100, Math.ceil(((monthBalance(S.planMonth, true).exp.find(x => x[0] === id) || [0, {total: 0}])[1].total) / 1000) * 1000)}); break;
     case "plan-cat": S.month = S.planMonth; S.f = {kind: "", status: "", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "inv-toggle": { const k = `${el.dataset.card}|${el.dataset.key}`; S.invOpen.has(k) ? S.invOpen.delete(k) : S.invOpen.add(k); const l = $("#lanc-list"); if (l) { l.innerHTML = lancList(); const r = l.querySelector(`[data-act="inv-toggle"][data-card="${el.dataset.card}"]`); if (r) r.focus(); } break; }
+    case "rep-year": S.repYear = String(+S.repYear + +el.dataset.d); render(); break;
+    case "rep-export": repExport(); break;
+    case "rep-cat-open": S.month = `${S.repYear}-${S.repPeriod}`; S.f = {kind: "", status: S.repPend ? "" : "efetivada", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "bal-month": S.balMonth = addMonthsKey(S.balMonth, +el.dataset.d); render(); break;
     case "bal-cat": S.month = S.balMonth; S.f = {kind: "", status: S.balPend ? "" : "efetivada", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "acct-month": S.acctMonth = addMonthsKey(S.acctMonth, +el.dataset.d); render(); break;
@@ -1609,6 +1832,10 @@ document.addEventListener("change", e => {
   const map = {"f-kind": "kind", "f-status": "status", "f-cat": "cat", "f-src": "src"};
   if (e.target.dataset && e.target.dataset.imp) { impFile(e.target.dataset.imp, e.target); return; }
   if (e.target.name === "lanc-view") { S.lancView = e.target.value; try { localStorage.setItem("livro-caixa-lancview", S.lancView); } catch {} const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); return; }
+  if (e.target.name === "rep-tab") { S.repTab = e.target.value; render(); return; }
+  if (e.target.name === "rep-cat") { S.repCatType = e.target.value; render(); return; }
+  if (e.target.id === "rep-period") { S.repPeriod = e.target.value; render(); return; }
+  if (e.target.id === "rep-pend") { S.repPend = e.target.checked; render(); return; }
   if (e.target.id === "bal-pend") { S.balPend = e.target.checked; try { localStorage.setItem("livro-caixa-balpend", S.balPend ? "1" : "0"); } catch {} render(); return; }
   if (map[e.target.id]) { S.f[map[e.target.id]] = e.target.value; const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); }
   if (e.target.id === "import-file") {
@@ -1627,6 +1854,7 @@ document.addEventListener("change", e => {
   }
 });
 window.addEventListener("hashchange", route);
+let rsT; window.addEventListener("resize", () => { clearTimeout(rsT); rsT = setTimeout(drawReports, 150); });
 S.route = VIEWS[location.hash.replace("#", "")] ? location.hash.replace("#", "") : "painel";
 boot();
 })();

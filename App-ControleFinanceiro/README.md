@@ -13,6 +13,7 @@ Aplicativo web de uma página só (HTML + JavaScript, sem dependências) para co
 - **Repetição mensal** de despesas e receitas (contas fixas).
 - **Lançamentos detalhados ou por fatura**: na tela de Lançamentos, a opção "Por fatura" junta as compras e estornos do cartão em uma linha por fatura (no mês de vencimento), que pode ser expandida para ver os itens.
 - **Painel** com saldo, valores a pagar e a receber, saldo previsto, vencimentos dos próximos 30 dias e despesas do mês por categoria.
+- **Relatórios**: fluxo de caixa anual com gráfico de receitas, despesas e resultado por mês, evolução do saldo em contas (com previsão), tabela exportável para Excel e relatório de receitas ou despesas por categoria no ano ou no mês.
 - **Importar do Excel**: duas importações (transações em contas e compras no cartão, com cartão e mês de vencimento da fatura). Cada uma tem um modelo .xlsx para baixar, com uma linha de exemplo e uma aba de instruções, além de prévia antes de gravar, aviso de duplicados e opção de desfazer a importação.
 - **Backup** em JSON (copiar e importar).
 
