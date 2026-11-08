@@ -8,6 +8,7 @@ Aplicativo web de uma página só (HTML + JavaScript, sem dependências) para co
 - **Cartões de crédito**: limite, dia de fechamento e de vencimento. Cada compra entra automaticamente na fatura certa, e você pode trocar a fatura manualmente. Também aceita compras parceladas (uma parcela por fatura), estornos e pagamento total ou parcial da fatura, à vista ou agendado.
 - **Categorias** de despesa e de receita, com uma lista padrão para começar.
 - **Lançamentos pendentes** (contas a pagar e a receber): não alteram o saldo até serem efetivados. Na efetivação dá para ajustar a data, o valor (juros ou desconto) e a conta.
+- **Planejamento**: limite de gasto por categoria em cada mês, com previsto versus realizado, status (dentro, atenção ou estourou), ritmo do mês, valor disponível por dia, gastos fora do planejamento, média dos últimos 3 meses e cópia do planejamento do mês anterior.
 - **Balanço mensal**: receitas e despesas do mês por categoria, em duas colunas, com o saldo do mês no topo, setas para trocar de mês e opção de incluir ou não os pendentes.
 - **Repetição mensal** de despesas e receitas (contas fixas).
 - **Painel** com saldo, valores a pagar e a receber, saldo previsto, vencimentos dos próximos 30 dias e despesas do mês por categoria.

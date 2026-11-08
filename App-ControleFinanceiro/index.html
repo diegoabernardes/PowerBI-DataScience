@@ -140,6 +140,26 @@ main{min-width:0;padding-block:26px 110px;padding-left:max(16px,env(safe-area-in
 .bal-opt{display:flex;justify-content:center;margin-top:-10px}
 .toggle{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:.88rem;color:var(--muted)}
 .toggle input{width:auto;accent-color:var(--accent)}
+/* planejamento */
+.pbar{position:relative;display:flex;height:10px;border-radius:5px;background:var(--surface-2);overflow:visible}
+.pbar.big{height:16px;border-radius:8px}
+.pbar > i{display:block;height:100%}
+.pbar > i:first-child{border-radius:5px 0 0 5px}
+.pbar > i.r.ok{background:var(--pos)} .pbar > i.r.warn{background:var(--warn)} .pbar > i.r.over{background:var(--neg)}
+.pbar > i.p{background:repeating-linear-gradient(135deg,var(--muted) 0 3px,transparent 3px 6px);opacity:.7}
+.pbar > b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px}
+.pbar > b.today{background:var(--accent);width:3px}
+.plan-list{display:grid}
+.plan-row{display:grid;gap:6px;padding:12px 4px;border-top:1px solid var(--line);cursor:pointer}
+.plan-row:first-child{border-top:0}
+.plan-row:hover{background:color-mix(in srgb,var(--surface-2) 55%,transparent)}
+.pr-top,.pr-bot{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.pr-top .nm{display:flex;align-items:center;gap:7px;font-weight:600;min-width:0;overflow-wrap:anywhere}
+.pace{display:grid;gap:10px}
+.plan-edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:760px){ .plan-edit{grid-template-columns:1fr} }
+.plan-grid{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}
+@media (max-width:900px){ .plan-grid{grid-template-columns:1fr} }
 /* categorias gráfico */
 .cbars{display:grid;gap:10px}
 .cbar{display:grid;grid-template-columns:minmax(0,150px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:.9rem}
@@ -270,14 +290,14 @@ const newId = () => Date.now().toString(36) + Math.random().toString(36).slice(2
 const sum = (arr, f) => arr.reduce((a, x) => a + f(x), 0);
 
 /* ---------- estado ---------- */
-const COLS = ["accounts", "cards", "categories", "transactions"];
+const COLS = ["accounts", "cards", "categories", "transactions", "budgets"];
 const S = {
   data: Object.fromEntries(COLS.map(c => [c, new Map()])),
   mode: "loading", loaded: false, stale: false,
   route: "painel", month: todayISO().slice(0,7), acctMonth: todayISO().slice(0,7),
   selAccount: null, selCard: null, invKey: {},
   f: {kind:"", status:"", cat:"", src:"", q:""},
-  balMonth: todayISO().slice(0,7), balPend: (() => { try { return localStorage.getItem("livro-caixa-balpend") !== "0"; } catch { return true; } })()
+  balMonth: todayISO().slice(0,7), planMonth: todayISO().slice(0,7), balPend: (() => { try { return localStorage.getItem("livro-caixa-balpend") !== "0"; } catch { return true; } })()
 };
 const L = col => [...S.data[col].values()];
 const get = (col, id) => S.data[col].get(id);
@@ -451,12 +471,13 @@ const ICON = {
   agenda:'<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/>',
   categorias:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.2"/>',
   ajustes:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1L7 17M17 7l2.1-2.1"/>',
+  planejamento:'<path d="M5 21V4M5 4h11l-2 4 2 4H5"/>',
   balanco:'<path d="M12 3v18M5 7h14M5 7l-3 7a3 3 0 0 0 6 0zM19 7l-3 7a3 3 0 0 0 6 0zM8 21h8"/>',
   importar:'<path d="M12 3v12M7 10l5 5 5-5M4 17v3h16v-3"/>',
   mais:'<circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/>'
 };
 const svg = k => `<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[k]}</svg>`;
-const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["balanco","Balanço mensal"],["importar","Importar do Excel"],["categorias","Categorias"],["ajustes","Ajustes"]];
+const ROUTES = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançamentos"],["agenda","A pagar e receber"],["planejamento","Planejamento"],["balanco","Balanço mensal"],["importar","Importar do Excel"],["categorias","Categorias"],["ajustes","Ajustes"]];
 const BOTTOM = [["painel","Painel"],["contas","Contas"],["cartoes","Cartões"],["lancamentos","Lançam."],["agenda","Agenda"],["mais","Mais"]];
 const COLORS = ["#0d5c4c","#2f6fb0","#7b4bb3","#b0397a","#c2542d","#a87b00","#4f7d2a","#5b6b65"];
 
@@ -552,6 +573,7 @@ function vPainel(){
       ${cats.length ? `<div class="cbars">${cats.slice(0, 8).map(([id, v]) => { const c = get("categories", id); return `<div class="cbar" title="${esc(c ? c.name : "Sem categoria")}: ${money(v)} (${Math.round(v / totC * 100)}%)"><span class="lbl"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(c ? c.name : "Sem categoria")}</span><span class="track"><i style="width:${(v / maxC * 100).toFixed(1)}%"></i></span><span class="num small">${money(v)}</span></div>`; }).join("")}</div><p class="small muted" style="margin-top:12px">Despesas efetivadas nas contas mais compras no cartão do mês, já descontados os estornos.</p>` : `<p class="empty">Nenhuma despesa lançada neste mês.</p>`}
     </section>
   </div>
+  ${planWidget()}
   <div class="grid2">
     <section class="panel"><div class="panel-h"><h2>Contas</h2><button class="linkbtn" data-act="nav" data-r="contas">Abrir</button></div>
       <div class="list-simple">${accs.length ? accs.map(a => `<div><span class="chip" style="color:var(--ink)"><i class="dot" style="background:${esc(a.color)}"></i>${esc(a.name)}</span><span class="num ${balance(a) < 0 ? "neg" : ""}">${money(balance(a))}</span></div>`).join("") : `<p class="empty">Nenhuma conta cadastrada.</p>`}</div>
@@ -719,6 +741,139 @@ function vBalanco(){
   </div>`;
 }
 
+/* ---------- planejamento ---------- */
+const budgetOf = m => get("budgets", m)?.items || {};
+const hasBudget = m => Object.keys(budgetOf(m)).length > 0;
+function planData(m){
+  const items = budgetOf(m);
+  const spent = new Map(monthBalance(m, true).exp.map(([id, e]) => [id, e]));
+  const today = todayISO(), cur = today.slice(0,7);
+  const days = lastDay(+m.slice(0,4), +m.slice(5,7));
+  const elapsed = m < cur ? days : m > cur ? 0 : +today.slice(8,10);
+  const left = days - elapsed + (m === cur ? 1 : 0);
+  const rows = Object.entries(items).map(([id, plan]) => {
+    const e = spent.get(id) || {total: 0, pend: 0};
+    const real = e.total - e.pend, total = e.total, rest = plan - total;
+    const pct = plan > 0 ? total / plan * 100 : 0;
+    const avg = catAverage(id, m);
+    let st = "ok";
+    if (total > plan) st = "over"; else if (pct >= 80) st = "warn";
+    return {id, plan, real, pend: e.pend, total, rest, pct, avg, st, perDay: m >= cur && left > 0 && rest > 0 ? Math.floor(rest / left) : 0};
+  });
+  const ord = {over: 0, warn: 1, ok: 2};
+  rows.sort((a, b) => ord[a.st] - ord[b.st] || b.pct - a.pct);
+  const off = [...spent.entries()].filter(([id, e]) => !(id in items) && e.total > 0).map(([id, e]) => ({id, total: e.total, pend: e.pend})).sort((a, b) => b.total - a.total);
+  const plan = sum(rows, r => r.plan), total = sum(rows, r => r.total), real = sum(rows, r => r.real), pend = sum(rows, r => r.pend), offTot = sum(off, r => r.total);
+  return {m, rows, off, plan, total, real, pend, offTot, days, elapsed, left, timePct: elapsed / days * 100, cur: m === cur};
+}
+const ST = {ok: ["pos", "Dentro"], warn: ["warn", "Atenção"], over: ["neg", "Estourou"]};
+function planBar(real, pend, plan, st){
+  const base = Math.max(plan, real + pend, 1);
+  return `<span class="pbar"><i class="r ${st}" style="width:${(real / base * 100).toFixed(1)}%"></i><i class="p" style="width:${(pend / base * 100).toFixed(1)}%"></i>${real + pend > plan && plan > 0 ? `<b style="left:${(plan / base * 100).toFixed(1)}%"></b>` : ""}</span>`;
+}
+function vPlanejamento(){
+  const m = S.planMonth, prev = addMonthsKey(m, -1), P = planData(m);
+  const nav = `<div class="bal-month" style="max-width:420px;margin:0 auto;width:100%"><button class="icon-btn" data-act="plan-month" data-d="-1" aria-label="Mês anterior">‹</button><strong>${fmonthLong(m)}</strong><button class="icon-btn" data-act="plan-month" data-d="1" aria-label="Próximo mês">›</button></div>`;
+  const acts = `<button class="btn" data-act="plan-copy">Copiar do mês anterior</button><button class="btn primary" data-act="plan-edit">${P.rows.length ? "Editar planejamento" : "Criar planejamento"}</button>`;
+  if (!P.rows.length) {
+    return head("Planejamento", "Quanto você quer gastar por categoria em cada mês", "") + nav + `
+    <section class="panel onb" style="margin:0 auto">
+      <h2>Sem planejamento para ${MES[+m.slice(5,7)-1]}</h2>
+      <p class="muted">Defina um limite de gasto para cada categoria. O app acompanha as despesas do mês e avisa quando uma categoria está perto de estourar.</p>
+      <div class="hact">
+        ${hasBudget(prev) ? `<button class="btn primary" data-act="plan-copy">Copiar de ${MES[+prev.slice(5,7)-1]} (${money(sum(Object.values(budgetOf(prev)), v => v))})</button>` : ""}
+        <button class="btn ${hasBudget(prev) ? "" : "primary"}" data-act="plan-edit">Criar planejamento</button>
+        <button class="btn" data-act="plan-avg">Sugerir pela média de 3 meses</button>
+      </div>
+      ${P.off.length ? `<p class="small muted">Já há ${money(P.offTot)} em despesas neste mês.</p>` : ""}
+    </section>`;
+  }
+  const saldo = P.plan - P.total;
+  const st = P.total > P.plan ? "over" : P.total / P.plan * 100 >= 80 ? "warn" : "ok";
+  const avgTot = sum(P.rows, r => r.avg);
+  const over = P.rows.filter(r => r.st === "over"), warn = P.rows.filter(r => r.st === "warn");
+  const row = r => { const c = get("categories", r.id); const nm = c ? c.name : "Categoria excluída";
+    return `<div class="plan-row" data-act="plan-cat" data-id="${esc(r.id)}" tabindex="0" role="button" title="Ver lançamentos de ${esc(nm)}">
+      <div class="pr-top"><span class="nm"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(nm)}</span><span class="pill ${ST[r.st][0]}">${ST[r.st][1]}</span></div>
+      ${planBar(r.real, r.pend, r.plan, r.st)}
+      <div class="pr-bot"><span class="num">${money(r.total)} <span class="muted">de ${money(r.plan)}</span></span><span class="num ${r.rest < 0 ? "neg" : ""}">${r.rest < 0 ? `${money(-r.rest)} acima` : `${money(r.rest)} disponível`}</span></div>
+      <div class="pr-meta small muted">${Math.round(r.pct)}% usado${r.pend ? ` · ${money(r.pend)} pendente` : ""}${P.cur && r.perDay ? ` · até ${money(r.perDay)}/dia` : ""}${r.avg ? ` · média 3 meses: ${money(r.avg)}${r.avg > r.plan ? ` <span class="warn">(acima do limite)</span>` : ""}` : ""}</div>
+    </div>`; };
+  return head("Planejamento", "Previsto versus realizado por categoria", acts) + nav + `
+  ${over.length || warn.length ? `<p class="banner">${over.length ? `${over.length === 1 ? "1 categoria estourou" : `${over.length} categorias estouraram`}: ${over.map(r => esc(get("categories", r.id)?.name || "?")).join(", ")}.` : ""} ${warn.length ? `${warn.length === 1 ? "1 categoria pede" : `${warn.length} categorias pedem`} atenção: ${warn.map(r => esc(get("categories", r.id)?.name || "?")).join(", ")}.` : ""}</p>` : ""}
+  <section class="kpis" aria-label="Resumo do planejamento">
+    <div class="kpi"><div class="eyebrow">Planejado</div><div class="v">${money(P.plan)}</div><div class="h">${P.rows.length} categorias</div></div>
+    <div class="kpi"><div class="eyebrow">Realizado</div><div class="v ${st === "over" ? "neg" : ""}">${money(P.total)}</div><div class="h">${Math.round(P.total / P.plan * 100)}% do planejado${P.pend ? ` · ${money(P.pend)} pendente` : ""}</div></div>
+    <div class="kpi"><div class="eyebrow">${saldo < 0 ? "Acima do planejado" : "Disponível"}</div><div class="v ${saldo < 0 ? "neg" : "pos"}">${money(Math.abs(saldo))}</div><div class="h">${P.cur && saldo > 0 && P.left ? `até ${money(Math.floor(saldo / P.left))} por dia` : P.cur ? `${P.left} dias restantes` : "no mês"}</div></div>
+    <div class="kpi"><div class="eyebrow">Média de 3 meses</div><div class="v ${avgTot > P.plan ? "warn" : ""}">${avgTot ? money(avgTot) : "—"}</div><div class="h">${avgTot ? "gasto médio nessas categorias" : "sem histórico nos últimos 3 meses"}</div></div>
+  </section>
+  <section class="panel">
+    <div class="panel-h"><h2>Ritmo do mês</h2><span class="small muted">${P.cur ? `Dia ${P.elapsed} de ${P.days}` : m < todayISO().slice(0,7) ? "Mês encerrado" : "Mês futuro"}</span></div>
+    <div class="pace"><span class="pbar big">${`<i class="r ${st}" style="width:${Math.min(100, P.real / P.plan * 100).toFixed(1)}%"></i><i class="p" style="width:${Math.max(0, Math.min(100 - P.real / P.plan * 100, P.pend / P.plan * 100)).toFixed(1)}%"></i>`}${P.cur ? `<b class="today" style="left:${P.timePct.toFixed(1)}%" title="Hoje"></b>` : ""}</span>
+    <div class="pr-bot small"><span>Gasto: <strong class="num">${Math.round(P.total / P.plan * 100)}%</strong> do planejado</span>${P.cur ? `<span>Mês: <strong class="num">${Math.round(P.timePct)}%</strong> decorrido</span>` : ""}</div>
+    <p class="small muted">${P.cur ? (P.total / P.plan * 100 > P.timePct + 5 ? "Você já usou uma parte do planejado maior que a parte do mês que passou. Contas fixas pagas no início do mês costumam causar isso." : "Os gastos estão abaixo do ritmo do mês.") : ""} A marca vertical é o dia de hoje; a parte listrada é o que está pendente de pagamento.</p></div>
+  </section>
+  <div class="grid2 plan-grid">
+    <section class="panel"><div class="panel-h"><h2>Por categoria</h2><span class="small muted">Toque para ver os lançamentos</span></div><div class="plan-list">${P.rows.map(row).join("")}</div></section>
+    <div style="display:grid;gap:22px;align-content:start">
+      <section class="panel"><div class="panel-h"><h2>Fora do planejamento</h2><span class="num ${P.offTot ? "neg" : "muted"}">${money(P.offTot)}</span></div>
+        ${P.off.length ? `<div class="list-simple">${P.off.map(o => { const c = get("categories", o.id); return `<div><span class="chip" style="color:var(--ink)"><i class="dot" style="background:${esc(c ? c.color : "")}"></i>${esc(c ? c.name : "Sem categoria")}</span><span class="hact"><span class="num">${money(o.total)}</span>${o.id ? `<button class="btn sm" data-act="plan-add" data-id="${esc(o.id)}">Planejar</button>` : ""}</span></div>`; }).join("")}</div>` : `<p class="empty">Todas as despesas do mês estão em categorias planejadas.</p>`}
+      </section>
+      <section class="panel"><h2>Comparar com ${MES[+prev.slice(5,7)-1]}</h2>
+        ${(() => { const Q = planData(prev); return Q.rows.length || Q.off.length ? `<div class="list-simple"><div><span>Planejado</span><span class="num">${money(Q.plan)} → ${money(P.plan)}</span></div><div><span>Realizado</span><span class="num">${money(Q.total + Q.offTot)}${P.cur ? "" : ` → ${money(P.total + P.offTot)}`}</span></div>${Q.rows.length ? `<div><span>Categorias estouradas</span><span class="num">${Q.rows.filter(r => r.st === "over").length}</span></div>` : ""}</div>` : `<p class="empty">Sem dados de ${MES[+prev.slice(5,7)-1]}.</p>`; })()}
+      </section>
+    </div>
+  </div>`;
+}
+function catAverage(id, m, n = 3){
+  let t = 0; for (let i = 1; i <= n; i++) { const e = monthBalance(addMonthsKey(m, -i), true).exp.find(x => x[0] === id); t += e ? e[1].total : 0; }
+  return Math.round(t / n / 100) * 100;
+}
+function openPlanEdit(m, preset){
+  const cats = L("categories").filter(c => c.type === "despesa").sort((a, b) => a.name.localeCompare(b.name));
+  if (!cats.length) { toast("Crie categorias de despesa antes de planejar."); return; }
+  const items = preset || budgetOf(m), prev = addMonthsKey(m, -1);
+  const lastReal = new Map(monthBalance(prev, true).exp.map(([id, e]) => [id, e.total]));
+  const body = () => `<p class="small muted">Deixe em branco as categorias que não quer acompanhar. Abaixo de cada campo aparece quanto foi gasto em ${MES[+prev.slice(5,7)-1]} e a média dos últimos 3 meses.</p>
+    <div class="plan-edit">${cats.map(c => `<label class="field"><span><i class="dot" style="background:${esc(c.color)};display:inline-block;margin-right:6px"></i>${esc(c.name)}</span>
+      <input name="b_${esc(c.id)}" id="pe-${esc(c.id)}" inputmode="decimal" class="num" placeholder="0,00" value="${items[c.id] ? centsToInput(items[c.id]) : ""}">
+      <small class="hint">${MES[+prev.slice(5,7)-1].slice(0,3)}: ${money(lastReal.get(c.id) || 0)} · média: ${money(catAverage(c.id, m))}</small></label>`).join("")}</div>
+    <div class="rowline"><span>Total planejado</span><strong class="num" id="pe-total">${money(sum(Object.values(items), v => v))}</strong></div>`;
+  openModal({
+    title: `Planejamento de ${fmonthLong(m)}`, body: body(),
+    foot: footSave("Salvar planejamento", `<button type="button" class="btn spacer" data-act="plan-fill-avg">Preencher com a média</button>`),
+    onSubmit: fd => {
+      const out = {};
+      for (const [k, v] of Object.entries(fd)) { if (!k.startsWith("b_")) continue; const c = parseMoney(v); if (Number.isNaN(c) || c < 0) return `Valor inválido em ${get("categories", k.slice(2))?.name || "uma categoria"}.`; if (c > 0) out[k.slice(2)] = c; }
+      if (!Object.keys(out).length) { if (get("budgets", m)) Store.remove("budgets", m); toast("Planejamento removido."); return; }
+      Store.put("budgets", {id: m, month: m, items: out, updatedAt: Date.now()}); toast("Planejamento salvo.");
+    }
+  });
+}
+function planCopy(m, force){
+  const prev = addMonthsKey(m, -1), src = budgetOf(prev);
+  if (!Object.keys(src).length) { toast(`Não há planejamento em ${MES[+prev.slice(5,7)-1]} para copiar.`); return; }
+  if (hasBudget(m) && !force) {
+    openModal({title: "Substituir planejamento", body: `<p>${fmonthLong(m)} já tem um planejamento. Copiar de ${MES[+prev.slice(5,7)-1]} vai substituir os valores atuais (${money(sum(Object.values(budgetOf(m)), v => v))}) por ${money(sum(Object.values(src), v => v))}.</p>`,
+      foot: `<button type="button" class="btn" data-act="close">Cancelar</button><button type="button" class="btn primary" data-act="plan-copy-yes">Substituir</button>`});
+    return;
+  }
+  const items = {}; Object.entries(src).forEach(([id, v]) => { if (get("categories", id)) items[id] = v; });
+  Store.put("budgets", {id: m, month: m, items, updatedAt: Date.now()});
+  toast(`Planejamento copiado de ${MES[+prev.slice(5,7)-1]}.`);
+}
+function planWidget(){
+  const m = todayISO().slice(0,7);
+  if (!hasBudget(m)) return hasBudget(addMonthsKey(m, -1)) ? `<p class="banner">Este mês ainda não tem planejamento. <button class="linkbtn" data-act="plan-copy-now">Copiar o do mês passado</button> ou <button class="linkbtn" data-act="nav" data-r="planejamento">criar um novo</button>.</p>` : "";
+  const P = planData(m), st = P.total > P.plan ? "over" : P.total / P.plan * 100 >= 80 ? "warn" : "ok";
+  const hot = P.rows.filter(r => r.st !== "ok").slice(0, 3);
+  return `<section class="panel"><div class="panel-h"><h2>Planejamento de ${MES[+m.slice(5,7)-1]}</h2><button class="linkbtn" data-act="nav" data-r="planejamento">Abrir</button></div>
+    <div class="pace"><span class="pbar big"><i class="r ${st}" style="width:${Math.min(100, P.real / P.plan * 100).toFixed(1)}%"></i><i class="p" style="width:${Math.max(0, Math.min(100 - P.real / P.plan * 100, P.pend / P.plan * 100)).toFixed(1)}%"></i><b class="today" style="left:${P.timePct.toFixed(1)}%" title="Hoje"></b></span>
+    <div class="pr-bot small"><span><strong class="num">${money(P.total)}</strong> de ${money(P.plan)}</span><span class="${P.plan - P.total < 0 ? "neg" : ""}">${P.plan - P.total < 0 ? `${money(P.total - P.plan)} acima` : `${money(P.plan - P.total)} disponível`}</span></div>
+    ${hot.length ? `<div class="r-meta">${hot.map(r => `<span class="pill ${ST[r.st][0]}">${esc(get("categories", r.id)?.name || "?")} ${Math.round(r.pct)}%</span>`).join("")}</div>` : `<p class="small muted">Todas as categorias dentro do planejado.</p>`}</div>
+  </section>`;
+}
+
 function vCategorias(){
   const cats = L("categories").sort((a, b) => a.name.localeCompare(b.name));
   const used = id => L("transactions").filter(t => t.categoryId === id).length;
@@ -749,6 +904,7 @@ function vAjustes(){
 }
 function vMais(){
   return head("Mais", "", "") + `<section class="panel"><div class="list-simple">
+    <div><a class="linkbtn" href="#planejamento">Planejamento</a><span class="muted small">Limite de gasto por categoria</span></div>
     <div><a class="linkbtn" href="#balanco">Balanço mensal</a><span class="muted small">Receitas e despesas por categoria</span></div>
     <div><a class="linkbtn" href="#importar">Importar do Excel</a><span class="muted small">Transações e compras no cartão</span></div>
     <div><a class="linkbtn" href="#categorias">Categorias</a><span class="muted small">${L("categories").length}</span></div>
@@ -757,10 +913,10 @@ function vMais(){
 }
 
 /* ---------- render ---------- */
-const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, balanco: vBalanco, importar: vImportar, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
+const VIEWS = {painel: vPainel, contas: vContas, cartoes: vCartoes, lancamentos: vLancamentos, agenda: vAgenda, planejamento: vPlanejamento, balanco: vBalanco, importar: vImportar, categorias: vCategorias, ajustes: vAjustes, mais: vMais};
 function render(){
   $("#nav-side").innerHTML = ROUTES.map(([r, l]) => `<a href="#${r}" ${S.route === r ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
-  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["balanco", "importar", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
+  $("#nav-bottom").innerHTML = BOTTOM.map(([r, l]) => `<a href="#${r}" ${S.route === r || (r === "mais" && ["planejamento", "balanco", "importar", "categorias", "ajustes"].includes(S.route)) ? 'aria-current="page"' : ""}>${svg(r)}<span>${l}</span></a>`).join("");
   $("#store-note").textContent = S.mode === "cloud" ? "Dados salvos na sua conta, visíveis só para você." : S.mode === "local" ? "Dados salvos só neste navegador." : "Carregando…";
   const v = $("#view");
   if (!S.loaded) { v.innerHTML = head("Livro-Caixa", "Carregando seus dados…", "") + `<section class="panel"><p class="muted">Buscando contas, cartões e lançamentos.</p></section>`; return; }
@@ -1350,6 +1506,15 @@ document.addEventListener("click", e => {
       break;
     }
     case "imp-undo-yes": Store.removeMany(L("transactions").filter(t => t.importId === id).map(t => ({col: "transactions", id: t.id}))); closeModal(); toast("Importação desfeita."); break;
+    case "plan-month": S.planMonth = addMonthsKey(S.planMonth, +el.dataset.d); render(); break;
+    case "plan-edit": openPlanEdit(S.planMonth); break;
+    case "plan-copy": planCopy(S.planMonth); break;
+    case "plan-copy-yes": closeModal(); planCopy(S.planMonth, true); break;
+    case "plan-copy-now": S.planMonth = todayISO().slice(0,7); planCopy(S.planMonth); break;
+    case "plan-avg": { const items = {}; L("categories").filter(c => c.type === "despesa").forEach(c => { const v = catAverage(c.id, S.planMonth); if (v > 0) items[c.id] = v; }); if (!Object.keys(items).length) { toast("Não há despesas nos últimos 3 meses para calcular a média."); break; } openPlanEdit(S.planMonth, items); break; }
+    case "plan-fill-avg": L("categories").filter(c => c.type === "despesa").forEach(c => { const i = document.getElementById("pe-" + c.id); const v = catAverage(c.id, S.planMonth); if (i) i.value = v ? centsToInput(v) : ""; }); planTotal(); break;
+    case "plan-add": openPlanEdit(S.planMonth, {...budgetOf(S.planMonth), [id]: Math.max(100, Math.ceil(((monthBalance(S.planMonth, true).exp.find(x => x[0] === id) || [0, {total: 0}])[1].total) / 1000) * 1000)}); break;
+    case "plan-cat": S.month = S.planMonth; S.f = {kind: "", status: "", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "bal-month": S.balMonth = addMonthsKey(S.balMonth, +el.dataset.d); render(); break;
     case "bal-cat": S.month = S.balMonth; S.f = {kind: "", status: S.balPend ? "" : "efetivada", cat: id, src: "", q: ""}; location.hash = "lancamentos"; break;
     case "acct-month": S.acctMonth = addMonthsKey(S.acctMonth, +el.dataset.d); render(); break;
@@ -1381,7 +1546,9 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => {
   if ((e.key === "Enter" || e.key === " ") && e.target.matches('[role="button"][data-act]')) { e.preventDefault(); e.target.click(); }
 });
+function planTotal(){ const t = $("#pe-total"); if (!t) return; let c = 0; form.querySelectorAll('input[name^="b_"]').forEach(i => { const v = parseMoney(i.value); if (v > 0) c += v; }); t.textContent = money(c); }
 document.addEventListener("input", e => {
+  if (e.target.name && e.target.name.startsWith("b_")) planTotal();
   if (e.target.id === "f-q") { S.f.q = e.target.value; const l = $("#lanc-list"); if (l) l.innerHTML = lancList(); }
 });
 document.addEventListener("change", e => {
